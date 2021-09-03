@@ -18,6 +18,8 @@
 #include <Windows.h>
 #include <stdio.h>
 
+#include "logger.hh"
+
 // =================================
 // dinput8 jump functions
 // =================================
@@ -96,4 +98,6 @@ BOOL WINAPI DllMain(HMODULE __module, DWORD __reason, LPVOID __load_type) {
     default:
       break;
   }
+
+  return TRUE;
 }

@@ -17,6 +17,7 @@
 
 set(TRAVELLER_SOURCE_FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/dll_main.cc"
+	"${CMAKE_CURRENT_SOURCE_DIR}/logger.cc"
 	"${CMAKE_CURRENT_SOURCE_DIR}/dinput8.def")
 
 set(TRAVELLER_INCLUDE_DIRECTORIES
@@ -28,3 +29,6 @@ add_library(dinput8 SHARED ${TRAVELLER_SOURCE_FILES})
 target_compile_definitions(dinput8 PUBLIC WIN32_LEAN_AND_MEAN)
 
 target_include_directories(dinput8 PUBLIC ${TRAVELLER_INCLUDE_DIRECTORIES})
+
+# todo: add way to configure this
+install(TARGETS dinput8 DESTINATION "C:/Program Files (x86)/Steam/steamapps/common/Lego Star Wars Saga")
