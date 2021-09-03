@@ -1,6 +1,6 @@
 # averysumner - traveller
 # CMakeLists.txt
-# root CMake file
+# third party CMake file
 # Copyright 2021 averysumner
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.10)
+# subhook
 
-project(traveller VERSION 1.0)
+set(SUBHOOK_STATIC ON)
+set(SUBHOOK_TESTS OFF)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
-
-# third party
-add_subdirectory("third_party")
-
-# internal
-add_subdirectory("source")
+add_subdirectory("subhook")

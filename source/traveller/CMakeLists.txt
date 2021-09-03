@@ -24,11 +24,16 @@ set(TRAVELLER_INCLUDE_DIRECTORIES
 	"${CMAKE_SOURCE_DIR}/include/traveller"
 	${PROJECT_BINARY_DIR})
 
+set(TRAVELLER_LINK_LIBRARIES
+	subhook)
+
 add_library(dinput8 SHARED ${TRAVELLER_SOURCE_FILES})
 
 target_compile_definitions(dinput8 PUBLIC WIN32_LEAN_AND_MEAN)
 
 target_include_directories(dinput8 PUBLIC ${TRAVELLER_INCLUDE_DIRECTORIES})
+
+target_link_libraries(dinput8 PUBLIC ${TRAVELLER_LINK_LIBRARIES})
 
 # todo: add way to configure this
 install(TARGETS dinput8 DESTINATION "C:/Program Files (x86)/Steam/steamapps/common/Lego Star Wars Saga")
