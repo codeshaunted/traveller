@@ -25,6 +25,10 @@
 
 #include "logger.hh"
 #include "addresses.hh"
+#include "raw_api.hh"
+#include "object_manager.hh"
+
+using namespace traveller; // we can do this in the main file since DllMain can't be in a namespace
 
 // =================================
 // dinput8 jump functions
@@ -73,26 +77,102 @@ subhook::Hook event_update_hook;
 
 typedef void(*t_event)();
 
-struct s_Mod {
-  t_event event_pre_initialize;
-  t_event event_post_initialize;
-  t_event event_update;
-};
-
-std::vector<s_Mod> mods;
-
 void eventPreInitialize() {
-  TRAVELLER_LOG("Running mod pre initializations.");
+  TRAVELLER_LOG("Running pre-initialization.");
+
   ((t_event)event_pre_initialize_hook.GetTrampoline())();
 }
 
+static bool post_initialized = false;
 void eventPostInitialize() {
-  TRAVELLER_LOG("Running mod post initializations.");
+  if (post_initialized) {
+    ((t_event)event_post_initialize_hook.GetTrampoline())();
+    return;
+  }
+  else {
+    post_initialized = true;
+  }
+
+  TRAVELLER_LOG("Running post-initialization.");
+
+  for (int i = 1; i < *raw_api::argc; ++i) {
+    std::string argument = *raw_api::argv[i];
+    argument.erase(0, 1);
+
+    if (argument == "server") {
+
+    }
+  }
+
   ((t_event)event_post_initialize_hook.GetTrampoline())();
 }
 
 void eventUpdate() {
   ((t_event)event_update_hook.GetTrampoline())();
+}
+
+// =================================
+// engine function hooking
+// =================================
+
+// todo: move these somewhere else
+
+subhook::Hook function_api_object_create_hook;
+subhook::Hook function_api_object_destroy_hook;
+
+typedef void* (*t_apiObjectCreate)(size_t*);
+typedef void (*t_apiObjectDestroy)(size_t*, void*);
+
+// copy pasted from ghidra
+void* apiObjectCreate(size_t* __parameter) {
+  size_t _Size;
+  int iVar1;
+  void* _Dst;
+
+  if ((__parameter != (size_t*)0x0) && (_Size = *__parameter, _Size != 0)) {
+    _Dst = (void*)__parameter[1];
+    iVar1 = 0;
+    do {
+      if ((*(char*)((int)_Dst + 0x1fc) & 1) == 0) {
+        memset(_Dst, 0, _Size);
+        *(uint32_t*)((int)_Dst + 0x1fc) = *(uint32_t*)((int)_Dst + 0x1fc) | 1;
+        *(char*)((int)_Dst + 0x28d) = (char)iVar1;
+        ObjectManager::registerObject((GameObject_s*)_Dst); // notify object manager
+        return _Dst;
+      }
+      iVar1 = iVar1 + 1;
+      _Dst = (void*)((int)_Dst + _Size);
+    } while (iVar1 < 0x40);
+  }
+  return (void*)0x0;
+}
+
+// also copy pasted from ghidra
+void apiObjectDestroy(size_t* __parameter_0, void* __parameter_1) {
+  byte bVar1;
+  int iVar2;
+  size_t sVar3;
+
+  ObjectManager::unregisterObject((GameObject_s*)__parameter_1);
+
+  if (((__parameter_0 != (size_t*)0x0) && (__parameter_1 != (void*)0x0)) && (*__parameter_0 != 0)) {
+    if (__parameter_0 != (size_t*)0xfffffff8) {
+      sVar3 = __parameter_0[1];
+      iVar2 = 0x40;
+      do {
+        if ((*(byte*)(sVar3 + 0x1fc) & 1) != 0) {
+          raw_api::FUN_0062a8c0((int)__parameter_0, sVar3, (int)__parameter_1);
+        }
+        sVar3 = sVar3 + *__parameter_0;
+        iVar2 = iVar2 + -1;
+      } while (iVar2 != 0);
+      bVar1 = *(byte*)((int)__parameter_1 + 0x28d);
+      __parameter_0[(uint32_t)bVar1 * 2 + 2] = 0;
+      __parameter_0[(uint32_t)bVar1 * 2 + 3] = 0;
+    }
+    memset(__parameter_1, 0, *__parameter_0);
+  }
+  return;
 }
 
 // =================================
@@ -135,21 +215,9 @@ void installEngineEventHooks() {
   event_update_hook.Install((void*)TRAVELLER_EVENT_UPDATE_ADDRESS, (void*)eventUpdate);
 }
 
-void loadMods() {
-  std::filesystem::create_directory("mods"); // creates the "mods" folder if it doesn't already exist.
-
-  for (const auto& directory : std::filesystem::directory_iterator("mods")) {
-    std::filesystem::path mod_path = std::filesystem::absolute(directory) / "mod.dll";
-    HMODULE mod = LoadLibraryA((LPCSTR)mod_path.string().c_str());
-
-    s_Mod mod_functions;
-    mod_functions.event_pre_initialize = (t_event)GetProcAddress(mod, "eventPreInitialize");
-    mod_functions.event_post_initialize = (t_event)GetProcAddress(mod, "eventPostInitialize");
-    mod_functions.event_update = (t_event)GetProcAddress(mod, "eventUpdate");
-
-    if (!mod) TRAVELLER_LOG_ERROR("Failed to load mod at \"%s\"!", mod_path);
-    else mods.push_back(mod_functions);
-  }
+void installEngineFunctionHooks() {
+  function_api_object_create_hook.Install((void*)TRAVELLER_FUNCTION_API_OBJECT_CREATE, (void*)apiObjectCreate);
+  function_api_object_destroy_hook.Install((void*)TRAVELLER_FUNCTION_API_OBJECT_DESTROY, (void*)apiObjectDestroy);
 }
 
 // =================================
@@ -162,7 +230,7 @@ BOOL WINAPI DllMain(HMODULE __module, DWORD __reason, LPVOID __load_type) {
       initializeConsole();
       initializeDLLProxy();
       installEngineEventHooks();
-      loadMods();
+      installEngineFunctionHooks();
       break;
     case DLL_PROCESS_DETACH:
       FreeLibrary(dinput8); // free loaded DLL

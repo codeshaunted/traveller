@@ -20,9 +20,7 @@
 
 namespace traveller {
 
-#define TRAVELLER_EVENT_PRE_INITIALIZE extern "C" __declspec(dllexport) void eventPreInitialize()
-#define TRAVELLER_EVENT_POST_INITIALIZE extern "C" __declspec(dllexport) void eventPostInitialize()
-#define TRAVELLER_EVENT_UPDATE extern "C" __declspec(dllexport) void eventUpdate()
+
 
 } // namespace traveller
 

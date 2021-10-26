@@ -1,6 +1,6 @@
 // averysumner - traveller
-// addresses.hh
-// contains hardcoded exe addresses
+// object.cc
+// contains object definitions
 // Copyright 2021 averysumner
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +15,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TRAVELLER_ADDRESSES_HH
-#define TRAVELLER_ADDRESSES_HH
+#include "object.hh"
 
-#define TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS 0x00492b47
-#define TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS 0x00549430
-#define TRAVELLER_EVENT_UPDATE_ADDRESS 0x004933d4
-#define TRAVELLER_FUNCTION_API_OBJECT_CREATE 0x0062a870
-#define TRAVELLER_FUNCTION_API_OBJECT_DESTROY 0x0062a910
+namespace traveller {
 
-#endif // TRAVELLER_ADDRESSES_HH
+GameObject_s* Object::getGameObject() {
+  return _game_object;
+}
+
+} // namespace traveller

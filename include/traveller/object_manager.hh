@@ -1,6 +1,6 @@
 // averysumner - traveller
-// addresses.hh
-// contains hardcoded exe addresses
+// object_manager.hh
+// contains object manager declarations
 // Copyright 2021 averysumner
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +15,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TRAVELLER_ADDRESSES_HH
-#define TRAVELLER_ADDRESSES_HH
+#ifndef TRAVELLER_OBJECT_MANAGER_HH
+#define TRAVELLER_OBJECT_MANAGER_HH
 
-#define TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS 0x00492b47
-#define TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS 0x00549430
-#define TRAVELLER_EVENT_UPDATE_ADDRESS 0x004933d4
-#define TRAVELLER_FUNCTION_API_OBJECT_CREATE 0x0062a870
-#define TRAVELLER_FUNCTION_API_OBJECT_DESTROY 0x0062a910
+#include <unordered_map>
 
-#endif // TRAVELLER_ADDRESSES_HH
+#include "object.hh"
+
+namespace traveller {
+
+class ObjectManager {
+  public:
+    static void registerObject(GameObject_s* __game_object);
+    static void unregisterObject(GameObject_s* __game_object);
+  private:
+    static t_objid nextID();
+    static t_objid _next_id;
+    static std::unordered_map<t_objid, Object> _objects;
+};
+
+} // namespace traveller
+
+#endif // TRAVELLER_OBJECT_MANAGER_HH
