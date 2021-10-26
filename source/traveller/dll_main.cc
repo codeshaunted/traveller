@@ -15,11 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// notice: this entire file is a huge mess and that probably won't change without some serious restructuring
+
 #include <Windows.h>
 #include <stdio.h>
-
-#include <filesystem>
-#include <vector>
 
 #include "subhook.h"
 
@@ -27,6 +26,7 @@
 #include "addresses.hh"
 #include "raw_api.hh"
 #include "object_manager.hh"
+#include "server.hh"
 
 using namespace traveller; // we can do this in the main file since DllMain can't be in a namespace
 
@@ -83,6 +83,8 @@ void eventPreInitialize() {
   ((t_event)event_pre_initialize_hook.GetTrampoline())();
 }
 
+static Peer* peer;
+
 static bool post_initialized = false;
 void eventPostInitialize() {
   if (post_initialized) {
@@ -100,14 +102,18 @@ void eventPostInitialize() {
     argument.erase(0, 1);
 
     if (argument == "server") {
-
+      peer = new Server("0.0.0.0", 42069, 64); // todo: add cli flags to configure this
     }
   }
+
+  peer->start();
 
   ((t_event)event_post_initialize_hook.GetTrampoline())();
 }
 
 void eventUpdate() {
+  //peer->update();
+
   ((t_event)event_update_hook.GetTrampoline())();
 }
 

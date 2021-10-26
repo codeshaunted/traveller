@@ -1,6 +1,6 @@
 // averysumner - traveller
-// object.cc
-// contains object definitions
+// types.hh
+// contains higher level types for traveller
 // Copyright 2021 averysumner
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,20 +15,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "object.hh"
+#ifndef TRAVELLER_TYPES_HH
+#define TRAVELLER_TYPES_HH
 
-namespace traveller {
+struct t_vec3 {
+  float x;
+  float y;
+  float z;
+};
 
-GameObject_s* Object::getGameObject() {
-  return _game_object;
-}
-
-t_vec3 Object::getPosition() {
-  return *(t_vec3*)&_game_object->position;
-}
-
-t_vec3 Object::getVelocity() {
-  return *(t_vec3*)&_game_object->velocity;
-}
-
-} // namespace traveller
+#endif // TRAVELLER_TYPES_HH

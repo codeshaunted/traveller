@@ -1,6 +1,6 @@
 // averysumner - traveller
-// object.cc
-// contains object definitions
+// peer.hh
+// contains base peer class declarations
 // Copyright 2021 averysumner
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,20 +15,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "object.hh"
+#ifndef TRAVELLER_PEER_HH
+#define TRAVELLER_PEER_HH
 
 namespace traveller {
 
-GameObject_s* Object::getGameObject() {
-  return _game_object;
-}
-
-t_vec3 Object::getPosition() {
-  return *(t_vec3*)&_game_object->position;
-}
-
-t_vec3 Object::getVelocity() {
-  return *(t_vec3*)&_game_object->velocity;
-}
+class Peer {
+  public:
+    virtual void start() {};
+    virtual void update() {};
+    virtual void stop() {};
+};
 
 } // namespace traveller
+
+#endif // TRAVELLER_PEER_HH

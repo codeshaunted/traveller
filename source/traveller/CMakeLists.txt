@@ -16,18 +16,21 @@
 # limitations under the License.
 
 set(TRAVELLER_SOURCE_FILES
-	"${CMAKE_CURRENT_SOURCE_DIR}/dll_main.cc"
-	"${CMAKE_CURRENT_SOURCE_DIR}/logger.cc"
-	"${CMAKE_CURRENT_SOURCE_DIR}/object.cc"
-	"${CMAKE_CURRENT_SOURCE_DIR}/object_manager.cc"
-	"${CMAKE_CURRENT_SOURCE_DIR}/dinput8.def")
+  "${CMAKE_CURRENT_SOURCE_DIR}/dll_main.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/logger.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/object.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/object_manager.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/server.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/dinput8.def")
 
 set(TRAVELLER_INCLUDE_DIRECTORIES
-	"${CMAKE_SOURCE_DIR}/include/traveller"
-	${PROJECT_BINARY_DIR})
+  "${CMAKE_SOURCE_DIR}/include/traveller"
+  "${CMAKE_SOURCE_DIR}/third_party/enet/include"
+  ${PROJECT_BINARY_DIR})
 
 set(TRAVELLER_LINK_LIBRARIES
-	subhook)
+  subhook
+  enet)
 
 add_library(dinput8 SHARED ${TRAVELLER_SOURCE_FILES})
 

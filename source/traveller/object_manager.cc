@@ -21,16 +21,20 @@
 
 namespace traveller {
 
+std::unordered_map<t_objid, Object>& ObjectManager::getObjects() {
+  return _objects;
+}
+
 void ObjectManager::registerObject(GameObject_s* __game_object) {
   t_objid id = nextID();
-  TRAVELLER_LOG_DEBUG("Registered new object with ID: %i!", id);
+  TRAVELLER_LOG_DEBUG("Registered new object with ID: %i.", id);
   _objects.insert({id, Object(__game_object)});
 }
 
 void ObjectManager::unregisterObject(GameObject_s* __game_object) {
   for (auto& object : _objects) {
     if (object.second.getGameObject() == __game_object) {
-      TRAVELLER_LOG_DEBUG("Unregistered object with ID: %i!", object.first);
+      TRAVELLER_LOG_DEBUG("Unregistered object with ID: %i.", object.first);
       _objects.erase(object.first);
     }
   }

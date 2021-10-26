@@ -16,8 +16,11 @@
 # limitations under the License.
 
 # subhook
-
 set(SUBHOOK_STATIC ON)
 set(SUBHOOK_TESTS OFF)
 
 add_subdirectory("subhook")
+
+# enet
+set(ENET_STATIC ON)
+add_subdirectory("enet")

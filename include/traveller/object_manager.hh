@@ -26,6 +26,7 @@ namespace traveller {
 
 class ObjectManager {
   public:
+    static std::unordered_map<t_objid, Object>& getObjects();
     static void registerObject(GameObject_s* __game_object);
     static void unregisterObject(GameObject_s* __game_object);
   private:
