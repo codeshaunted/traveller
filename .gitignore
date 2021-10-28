@@ -37,3 +37,4 @@ CMakeSettings.json
 
 # Output
 build/
+out/

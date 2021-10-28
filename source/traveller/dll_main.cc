@@ -20,13 +20,12 @@
 #include <Windows.h>
 #include <stdio.h>
 
-#include "subhook.h"
-
 #include "logger.hh"
 #include "addresses.hh"
 #include "raw_api.hh"
 #include "object_manager.hh"
 #include "server.hh"
+#include "hook.hh"
 
 using namespace traveller; // we can do this in the main file since DllMain can't be in a namespace
 
@@ -68,28 +67,39 @@ __declspec(naked) void __stdcall jumpDllUnregisterServer() {
 }
 
 // =================================
+// thread functions
+// =================================
+
+DWORD WINAPI peerThread(Peer* __peer) {
+  __peer->start();
+
+  while (true) {
+    __peer->update();
+  }
+}
+
+// =================================
 // engine event hooking
 // =================================
 
-subhook::Hook event_pre_initialize_hook;
-subhook::Hook event_post_initialize_hook;
-subhook::Hook event_update_hook;
-
 typedef void(*t_event)();
+
+t_event event_pre_initialize_trampoline;
+t_event event_post_initialize_trampoline;
+t_event event_update_trampoline;
 
 void eventPreInitialize() {
   TRAVELLER_LOG("Running pre-initialization.");
 
-  ((t_event)event_pre_initialize_hook.GetTrampoline())();
+  return event_pre_initialize_trampoline();
 }
 
-static Peer* peer;
+Peer* peer = nullptr;
 
 static bool post_initialized = false;
 void eventPostInitialize() {
   if (post_initialized) {
-    ((t_event)event_post_initialize_hook.GetTrampoline())();
-    return;
+    return event_post_initialize_trampoline();
   }
   else {
     post_initialized = true;
@@ -98,7 +108,7 @@ void eventPostInitialize() {
   TRAVELLER_LOG("Running post-initialization.");
 
   for (int i = 1; i < *raw_api::argc; ++i) {
-    std::string argument = *raw_api::argv[i];
+    std::string argument = (*raw_api::argv)[i];
     argument.erase(0, 1);
 
     if (argument == "server") {
@@ -106,15 +116,24 @@ void eventPostInitialize() {
     }
   }
 
-  peer->start();
+  if (peer) {
+    //HANDLE thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)peerThread, peer, 0, 0);
+    peer->start();
+  }
 
-  ((t_event)event_post_initialize_hook.GetTrampoline())();
+  return event_post_initialize_trampoline();
 }
 
 void eventUpdate() {
-  //peer->update();
+  /*for (auto& object : ObjectManager::getObjects()) {
+    t_vec3 position = object.second.getPosition();
+    t_vec3 velocity = object.second.getVelocity();
+    TRAVELLER_LOG_DEBUG("Entity ID: %i", object.first);
+    TRAVELLER_LOG_DEBUG("Position: x: %f, y: %f, z: %f", position.x, position.y, position.z);
+    TRAVELLER_LOG_DEBUG("Velocity: x: %f, y: %f, z: %f", velocity.x, velocity.y, velocity.z);
+  }*/
 
-  ((t_event)event_update_hook.GetTrampoline())();
+  return event_update_trampoline();
 }
 
 // =================================
@@ -122,12 +141,6 @@ void eventUpdate() {
 // =================================
 
 // todo: move these somewhere else
-
-subhook::Hook function_api_object_create_hook;
-subhook::Hook function_api_object_destroy_hook;
-
-typedef void* (*t_apiObjectCreate)(size_t*);
-typedef void (*t_apiObjectDestroy)(size_t*, void*);
 
 // copy pasted from ghidra
 void* apiObjectCreate(size_t* __parameter) {
@@ -216,14 +229,14 @@ void initializeDLLProxy() {
 }
 
 void installEngineEventHooks() {
-  event_pre_initialize_hook.Install((void*)TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS, (void*)eventPreInitialize);
-  event_post_initialize_hook.Install((void*)TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS, (void*)eventPostInitialize);
-  event_update_hook.Install((void*)TRAVELLER_EVENT_UPDATE_ADDRESS, (void*)eventUpdate);
+  event_pre_initialize_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS, eventPreInitialize);
+  event_post_initialize_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS, eventPostInitialize);
+  event_update_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_UPDATE_ADDRESS, eventUpdate, 7);
 }
 
 void installEngineFunctionHooks() {
-  function_api_object_create_hook.Install((void*)TRAVELLER_FUNCTION_API_OBJECT_CREATE, (void*)apiObjectCreate);
-  function_api_object_destroy_hook.Install((void*)TRAVELLER_FUNCTION_API_OBJECT_DESTROY, (void*)apiObjectDestroy);
+  Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_CREATE, apiObjectCreate);
+  Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_DESTROY, apiObjectDestroy);
 }
 
 // =================================

@@ -1,6 +1,6 @@
 // averysumner - traveller
-// addresses.hh
-// contains hardcoded exe addresses
+// hook.hh
+// contains hook class declarations
 // Copyright 2021 averysumner
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +15,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TRAVELLER_ADDRESSES_HH
-#define TRAVELLER_ADDRESSES_HH
+#ifndef TRAVELLER_HOOK_HH
+#define TRAVELLER_HOOK_HH
 
-#define TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS 0x0055f430
-#define TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS 0x00408800
-#define TRAVELLER_EVENT_UPDATE_ADDRESS 0x0057d230
-#define TRAVELLER_FUNCTION_API_OBJECT_CREATE 0x0062a870
-#define TRAVELLER_FUNCTION_API_OBJECT_DESTROY 0x0062a910
+#include <cstdint>
 
-#endif // TRAVELLER_ADDRESSES_HH
+namespace traveller {
+
+#pragma pack(1)
+struct s_JMPInstruction {
+  uint8_t op_code = 0xe9;
+  uintptr_t address;
+};
+
+class Hook {
+  public:
+    static bool detour(uintptr_t __source, void* __destination, int length = 5);
+    static void* trampoline(uintptr_t __source, void* __destination, int length = 5);
+};
+
+} // namespace traveller
+
+#endif // TRAVELLER_HOOK_HH
