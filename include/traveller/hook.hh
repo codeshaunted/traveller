@@ -32,6 +32,7 @@ class Hook {
   public:
     static bool detour(uintptr_t __source, void* __destination, int length = 5);
     static void* trampoline(uintptr_t __source, void* __destination, int length = 5);
+    static void replaceCall(uintptr_t __source, void* __destination);
 };
 
 } // namespace traveller

@@ -57,4 +57,18 @@ void* Hook::trampoline(uintptr_t __source, void* __destination, int __length) {
   return bridge;
 }
 
+void Hook::replaceCall(uintptr_t __source, void* __destination) {
+  DWORD old_protect;
+  VirtualProtect((LPVOID)(__source + 1), sizeof(__destination), PAGE_EXECUTE_READWRITE, &old_protect);
+
+  uintptr_t address = (uintptr_t)__destination - __source - (sizeof(__destination) + 1);
+
+  memcpy((void*)(__source + 1), &address, sizeof(__destination));
+
+  DWORD dummy_protect;
+  VirtualProtect((LPVOID)(__source + 1), sizeof(__destination), old_protect, &dummy_protect);
+
+  return;
+}
+
 } // namespace traveller

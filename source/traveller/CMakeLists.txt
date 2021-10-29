@@ -17,8 +17,8 @@
 
 set(TRAVELLER_SOURCE_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/dll_main.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/hook.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/logger.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/hook.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/object.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/object_manager.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/server.cc"
@@ -31,10 +31,11 @@ set(TRAVELLER_COMPILE_DEFINITIONS
 set(TRAVELLER_INCLUDE_DIRECTORIES
   "${CMAKE_SOURCE_DIR}/include/traveller"
   "${CMAKE_SOURCE_DIR}/third_party/enet/include"
+  "${CMAKE_SOURCE_DIR}/third_party/Detours/src"
   ${PROJECT_BINARY_DIR})
 
 set(TRAVELLER_LINK_LIBRARIES
-  subhook
+  Detours
   enet)
 
 add_library(dinput8 SHARED ${TRAVELLER_SOURCE_FILES})

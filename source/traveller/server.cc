@@ -33,20 +33,20 @@ void Server::start() {
   address.port = _port;
 
   _server = enet_host_create(&address, _max_clients, 2, 0, 0);
-
+  
   if (!_server) {
     TRAVELLER_LOG_ERROR("A server could not be started!");
     return;
   }
 
-  TRAVELLER_LOG("Server successfully started at %s:%i.", _host, _port);
+  TRAVELLER_LOG("Server successfully started at %s:%i.", _host.c_str(), _port);
 }
 
 void Server::update() {
   ENetEvent event;
 
   // todo: maybe make server timeout configurable
-  while (enet_host_service(_server, &event, 1000) > 0) {
+  while (enet_host_service(_server, &event, 5) > 0) {
     char host_name[64];
     enet_address_get_host_ip(&event.peer->address, host_name, sizeof(host_name));
 

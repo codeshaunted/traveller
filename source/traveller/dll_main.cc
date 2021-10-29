@@ -20,6 +20,8 @@
 #include <Windows.h>
 #include <stdio.h>
 
+//#include "detours.h"
+
 #include "logger.hh"
 #include "addresses.hh"
 #include "raw_api.hh"
@@ -91,20 +93,12 @@ t_event event_update_trampoline;
 void eventPreInitialize() {
   TRAVELLER_LOG("Running pre-initialization.");
 
-  return event_pre_initialize_trampoline();
+  event_pre_initialize_trampoline();
 }
 
 Peer* peer = nullptr;
 
-static bool post_initialized = false;
 void eventPostInitialize() {
-  if (post_initialized) {
-    return event_post_initialize_trampoline();
-  }
-  else {
-    post_initialized = true;
-  }
-
   TRAVELLER_LOG("Running post-initialization.");
 
   for (int i = 1; i < *raw_api::argc; ++i) {
@@ -120,8 +114,6 @@ void eventPostInitialize() {
     //HANDLE thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)peerThread, peer, 0, 0);
     peer->start();
   }
-
-  return event_post_initialize_trampoline();
 }
 
 void eventUpdate() {
@@ -133,7 +125,9 @@ void eventUpdate() {
     TRAVELLER_LOG_DEBUG("Velocity: x: %f, y: %f, z: %f", velocity.x, velocity.y, velocity.z);
   }*/
 
-  return event_update_trampoline();
+  if (peer) peer->update();
+
+  event_update_trampoline();
 }
 
 // =================================
@@ -163,6 +157,7 @@ void* apiObjectCreate(size_t* __parameter) {
       _Dst = (void*)((int)_Dst + _Size);
     } while (iVar1 < 0x40);
   }
+
   return (void*)0x0;
 }
 
@@ -191,6 +186,7 @@ void apiObjectDestroy(size_t* __parameter_0, void* __parameter_1) {
     }
     memset(__parameter_1, 0, *__parameter_0);
   }
+
   return;
 }
 
@@ -228,15 +224,51 @@ void initializeDLLProxy() {
   dinput8_functions[4] = GetProcAddress(dinput8, "DllUnregisterServer");
 }
 
-void installEngineEventHooks() {
+void installHooks() {
+  /*
+  PVOID api_object_create = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS;
+  PVOID api_object_destroy = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS;
+  PVOID event_pre_initialize = (PVOID)TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS;
+  PVOID event_post_initialize = (PVOID)TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS;
+  PVOID event_update = (PVOID)TRAVELLER_EVENT_UPDATE_ADDRESS;
+
+  DetourRestoreAfterWith();
+
+  DetourTransactionBegin();
+  DetourUpdateThread(GetCurrentThread());
+  DetourAttach(&api_object_create, apiObjectCreate);
+  DetourAttach(&api_object_destroy, apiObjectDestroy);
+  DetourAttachEx(&event_pre_initialize, eventPreInitialize, &event_pre_initialize_trampoline, nullptr, nullptr);
+  DetourAttachEx(&event_post_initialize, eventPostInitialize, &event_post_initialize_trampoline, nullptr, nullptr);
+  DetourAttachEx(&event_update, eventUpdate, &event_update_trampoline, nullptr, nullptr);
+  DetourTransactionCommit();*/
+
+  // engine event hooks
   event_pre_initialize_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS, eventPreInitialize);
-  event_post_initialize_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS, eventPostInitialize);
+  Hook::replaceCall(TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS, eventPostInitialize);
   event_update_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_UPDATE_ADDRESS, eventUpdate, 7);
+  
+  // engine function hooks
+  Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS, apiObjectCreate);
+  Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS, apiObjectDestroy);
 }
 
-void installEngineFunctionHooks() {
-  Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_CREATE, apiObjectCreate);
-  Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_DESTROY, apiObjectDestroy);
+void removeHooks() {
+  /*
+  PVOID api_object_create = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS;
+  PVOID api_object_destroy = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS;
+  PVOID event_pre_initialize = (PVOID)TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS;
+  PVOID event_post_initialize = (PVOID)TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS;
+  PVOID event_update = (PVOID)TRAVELLER_EVENT_UPDATE_ADDRESS;
+
+  DetourTransactionBegin();
+  DetourUpdateThread(GetCurrentThread());
+  DetourDetach(&api_object_create, apiObjectCreate);
+  DetourDetach(&api_object_destroy, apiObjectDestroy);
+  DetourDetach(&event_pre_initialize, eventPreInitialize);
+  DetourDetach(&event_post_initialize, eventPostInitialize);
+  DetourDetach(&event_update, eventUpdate);
+  DetourTransactionCommit();*/
 }
 
 // =================================
@@ -244,14 +276,16 @@ void installEngineFunctionHooks() {
 // =================================
 
 BOOL WINAPI DllMain(HMODULE __module, DWORD __reason, LPVOID __load_type) {
+  //if (DetourIsHelperProcess()) return TRUE;
+
   switch (__reason) {
     case DLL_PROCESS_ATTACH:
       initializeConsole();
       initializeDLLProxy();
-      installEngineEventHooks();
-      installEngineFunctionHooks();
+      installHooks();
       break;
     case DLL_PROCESS_DETACH:
+      removeHooks();
       FreeLibrary(dinput8); // free loaded DLL
       TRAVELLER_LOG("Freed redirect dinput8.dll.");
       break;

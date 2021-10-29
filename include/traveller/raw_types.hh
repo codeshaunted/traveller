@@ -48,7 +48,7 @@ struct WORLDINFO_s {
   uint8_t field_2[0x14];
   LEVELDATA_s* level_data;
   LEVELDATA_s* alternate_level_data;
-  uint8_t field_5[0x285D];
+  uint8_t field_5[0x285d];
   APIOBJECTSYS_s* api_object_system;
 };
 
@@ -57,7 +57,11 @@ struct GameObject_s {
   CHARACTERDATA_s* character_data;
   nuvec_s position;
   nuvec_s velocity;
-  uint8_t field_4[0x1065];
+  uint8_t field_4[0x181];
+  uint32_t unknown_flag_0;
+  uint8_t field_5[0x8d];
+  uint32_t object_index;
+  uint8_t field_6[0xe4f];
 };
 
 } // namespace traveller
