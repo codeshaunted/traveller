@@ -64,6 +64,8 @@ struct GameObject_s {
     uint8_t field_6[0xe4f];
 };
 
+struct MENU_s {};
+
 } // namespace traveller
 
 #endif // TRAVELLER_RAW_TYPES_HH

@@ -36,8 +36,6 @@ set(TRAVELLER_INCLUDE_DIRECTORIES
     ${PROJECT_BINARY_DIR})
 
 set(TRAVELLER_LINK_LIBRARIES
-    Detours
-    enet
     RakNetLibStatic)
 
 add_library(dinput8 SHARED ${TRAVELLER_SOURCE_FILES})
