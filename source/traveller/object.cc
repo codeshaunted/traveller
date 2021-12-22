@@ -20,15 +20,15 @@
 namespace traveller {
 
 GameObject_s* Object::getGameObject() {
-  return _game_object;
+    return _game_object;
 }
 
 t_vec3 Object::getPosition() {
-  return *(t_vec3*)&_game_object->position;
+    return *(t_vec3*)&_game_object->position;
 }
 
 t_vec3 Object::getVelocity() {
-  return *(t_vec3*)&_game_object->velocity;
+    return *(t_vec3*)&_game_object->velocity;
 }
 
 } // namespace traveller
