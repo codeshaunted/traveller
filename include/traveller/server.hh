@@ -1,5 +1,5 @@
 // averysumner - traveller
-// server.hh
+// include/traveller/server.hh
 // contains server class declarations
 // Copyright 2021 averysumner
 //
@@ -20,27 +20,20 @@
 
 #include <string>
 
-#include "enet.h"
-
 #include "peer.hh"
-
-#define PEER_BROADCAST (ENetPeer*)0xdeadbeef // magic number to tell SendPacket to broadcast
 
 namespace traveller {
 
 class Server : public Peer {
-  public:
-    Server(std::string __host, uint16_t __port, uint32_t __max_clients) : _host(__host), _port(__port), _max_clients(__max_clients) {}
-    void start();
-    void update();
-    void stop();
-    //void sendPacket(ENetPeer* __peer, packets::Base* __data);
-    //void handlePacket(ENetPeer* __peer, packets::Base* __data);
-  private:
-    std::string _host;
-    uint16_t _port;
-    uint32_t _max_clients;
-    ENetHost* _server;
+    public:
+        Server(std::string __host, uint16_t __port, uint32_t __max_clients) : Peer(true), _host(__host), _port(__port), _max_clients(__max_clients) {}
+        void start();
+        void update();
+        void stop();
+    private:
+        std::string _host;
+        uint16_t _port;
+        uint32_t _max_clients;
 };
 
 } // namespace traveller

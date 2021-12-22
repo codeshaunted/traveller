@@ -1,5 +1,5 @@
 // averysumner - traveller
-// object.cc
+// source/traveller/object.cc
 // contains object definitions
 // Copyright 2021 averysumner
 //

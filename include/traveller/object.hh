@@ -1,5 +1,5 @@
 // averysumner - traveller
-// object.hh
+// include/traveller/object.hh
 // contains object declarations
 // Copyright 2021 averysumner
 //
@@ -26,13 +26,13 @@ namespace traveller {
 typedef uint32_t t_objid;
 
 class Object {
-public:
-  Object(GameObject_s* __game_object) : _game_object(__game_object) {}
-  GameObject_s* getGameObject();
-  t_vec3 getPosition();
-  t_vec3 getVelocity();
-private:
-  GameObject_s* _game_object;
+    public:
+        Object(GameObject_s* __game_object) : _game_object(__game_object) {}
+        GameObject_s* getGameObject();
+        t_vec3 getPosition();
+        t_vec3 getVelocity();
+    private:
+        GameObject_s* _game_object;
 };
 
 } // namespace traveller

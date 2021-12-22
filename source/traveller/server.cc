@@ -1,5 +1,5 @@
 // averysumner - traveller
-// server.cc
+// source/traveller/server.cc
 // contains server class definitions
 // Copyright 2021 averysumner
 //
@@ -17,76 +17,50 @@
 
 #include "server.hh"
 
+#include "MessageIdentifiers.h"
+
 #include "logger.hh"
+#include "messages.hh"
+#include "raw_api.hh"
 
 namespace traveller {
 
 void Server::start() {
-  if (enet_initialize() != 0) {
-    TRAVELLER_LOG_ERROR("Failed to initialize ENet!");
-    return;
-  }
+    _interface = RakNet::RakPeerInterface::GetInstance();
 
-  ENetAddress address = {0};
+    RakNet::SocketDescriptor socket_descriptor(_port, _host.c_str());
+    _interface->Startup(_max_clients, &socket_descriptor, 1);
+    _interface->SetMaximumIncomingConnections(_max_clients);
 
-  enet_address_set_host(&address, _host.c_str());
-  address.port = _port;
-
-  _server = enet_host_create(&address, _max_clients, 2, 0, 0);
-  
-  if (!_server) {
-    TRAVELLER_LOG_ERROR("A server could not be started!");
-    return;
-  }
-
-  TRAVELLER_LOG("Server successfully started at %s:%i.", _host.c_str(), _port);
+    TRAVELLER_LOG("Started server at %s|%u.", _host.c_str(), _port);
 }
 
 void Server::update() {
-  ENetEvent event;
+    for (RakNet::Packet* packet = _interface->Receive(); packet; _interface->DeallocatePacket(packet), packet = _interface->Receive()) {
+        uint8_t message_id = packet->data[0];
 
-  // todo: maybe make server timeout configurable
-  while (enet_host_service(_server, &event, 5) > 0) {
-    char host_name[64];
-    enet_address_get_host_ip(&event.peer->address, host_name, sizeof(host_name));
-
-    switch (event.type) {
-    case ENET_EVENT_TYPE_CONNECT: {
-      TRAVELLER_LOG("New connection from %s.", host_name);
-      //packets::GoToLevel go_to_level{ mod_api_->GetCurrentLevelID() };
-      //SendPacket(event.peer, &go_to_level);
-      break;
+        switch (message_id) {
+            case ID_NEW_INCOMING_CONNECTION: {
+                TRAVELLER_LOG("A new client has connected from %s.", packet->systemAddress.ToString());
+                MessageSetLevel message = MessageSetLevel(*RawAPI::Level);
+                send(message, packet->systemAddress, true);
+                break;
+            }
+            case ID_CONNECTION_LOST:
+                TRAVELLER_LOG("Lost connection to client at %s.", packet->systemAddress.ToString());
+                break;
+            default:
+                RakNet::BitStream bitstream(packet->data, packet->length, false);
+                Messages::handle(bitstream);
+                break;
+        }
     }
-    case ENET_EVENT_TYPE_RECEIVE:
-      enet_packet_destroy(event.packet);
-      break;
-    case ENET_EVENT_TYPE_DISCONNECT:
-      TRAVELLER_LOG("Lost connection to client at %s.", host_name);
-      break;
-    case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
-      TRAVELLER_LOG("Lost connection to client at %s via timeout.", host_name);
-      break;
-    case ENET_EVENT_TYPE_NONE:
-      break;
-    }
-  }
 }
 
 void Server::stop() {
-  enet_host_destroy(_server);
-  enet_deinitialize();
+    RakNet::RakPeerInterface::DestroyInstance(_interface);
+
+    TRAVELLER_LOG("Stopping server.");
 }
-/*
-void Server::sendPacket(ENetPeer* __peer, packets::Base* __data) {
-  DataStream data_stream;
-  __data->Serialize(data_stream);
-  ENetPacket* packet = enet_packet_create(data_stream.GetBytes(), data_stream.Length() , ENET_PACKET_FLAG_RELIABLE); // todo: maybe not always use reliable transmission?
-  if (__peer == PEER_BROADCAST) {
-    enet_host_broadcast(_server, 0, packet); // pass PEER_BROADCAST for peer to broadcast
-  }
-  else {
-    enet_peer_send(__peer, 0, packet);
-  }
-}*/
 
 } // namespace traveller

@@ -1,5 +1,5 @@
 ; averysumner - traveller
-; dinput8.def
+; source/traveller/dinput8.def
 ; contains dinput8.dll export mappings
 ; Copyright 2021 averysumner
 ;

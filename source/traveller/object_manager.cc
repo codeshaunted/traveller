@@ -1,5 +1,5 @@
 // averysumner - traveller
-// object_manager.cc
+// source/traveller/object_manager.cc
 // contains object manager definitions
 // Copyright 2021 averysumner
 //

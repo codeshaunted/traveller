@@ -1,5 +1,5 @@
 // averysumner - traveller
-// logger.hh
+// include/traveller/logger.hh
 // contains logger class declarations
 // Copyright 2021 averysumner
 //
@@ -23,33 +23,33 @@
 namespace traveller {
 
 enum class e_LogLevel : uint8_t {
-  INFO,
-  WARNING,
-  ERR, // if named ERROR it conflicts with a default windows #define; thank you microsoft
-  DEBUG
+    INFO,
+    WARNING,
+    ERR, // if named ERROR it conflicts with a default windows #define; thank you microsoft
+    DEBUG
 };
 
 // generic logger class
 class Logger {
-public:
-  Logger();
-  static Logger* getInstance();
-  void log(e_LogLevel __level, std::string __content);
-  void logFormat(e_LogLevel __level, const char* __content, ...); // MSVC literally spits a C1001 if you don't use a c string
-  static Logger* instance;
-protected:
-  e_LogLevel _level;
-private:
-  // todo: maybe make this configurable via config file
-  static const std::string _log_level_strings[];
-  static const std::string _log_level_colors[];
-  static const std::string _output_directory;
-  static const std::string _latest_log_name;
-  static const std::string _previous_log_name;
-  static const std::string _log_file_extension;
-  static const std::string _timestamp_format;
-  static const std::string _log_level_format;
-  static const std::string _content_format;
+    public:
+        Logger();
+        static Logger* getInstance();
+        void log(e_LogLevel __level, std::string __content);
+        void logFormat(e_LogLevel __level, const char* __content, ...); // MSVC literally spits a C1001 if you don't use a c string
+        static Logger* instance;
+    protected:
+        e_LogLevel _level;
+    private:
+        // todo: maybe make this configurable via config file
+        static const std::string _log_level_strings[];
+        static const std::string _log_level_colors[];
+        static const std::string _output_directory;
+        static const std::string _latest_log_name;
+        static const std::string _previous_log_name;
+        static const std::string _log_file_extension;
+        static const std::string _timestamp_format;
+        static const std::string _log_level_format;
+        static const std::string _content_format;
 };
 
 // todo: maybe make this support more than 16 format arguments?

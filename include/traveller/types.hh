@@ -1,5 +1,5 @@
 // averysumner - traveller
-// types.hh
+// include/traveller/types.hh
 // contains higher level types for traveller
 // Copyright 2021 averysumner
 //
@@ -19,9 +19,9 @@
 #define TRAVELLER_TYPES_HH
 
 struct t_vec3 {
-  float x;
-  float y;
-  float z;
+    float x;
+    float y;
+    float z;
 };
 
 #endif // TRAVELLER_TYPES_HH

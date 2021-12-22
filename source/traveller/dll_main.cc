@@ -1,5 +1,5 @@
 // averysumner - traveller
-// dll_main.cc
+// source/traveller/dll_main.cc
 // contains DllMain entry point
 // Copyright 2021 averysumner
 //
@@ -20,13 +20,12 @@
 #include <Windows.h>
 #include <stdio.h>
 
-//#include "detours.h"
-
 #include "logger.hh"
 #include "addresses.hh"
 #include "raw_api.hh"
 #include "object_manager.hh"
 #include "server.hh"
+#include "client.hh"
 #include "hook.hh"
 
 using namespace traveller; // we can do this in the main file since DllMain can't be in a namespace
@@ -39,33 +38,33 @@ HMODULE dinput8;
 FARPROC dinput8_functions[5];
 
 __declspec(naked) void __stdcall jumpDirectInput8Create() {
-  _asm {
-    jmp dinput8_functions[0];
-  }
+    _asm {
+        jmp dinput8_functions[0];
+    }
 }
 
 __declspec(naked) void __stdcall jumpDllCanUnloadNow() {
-  _asm {
-    jmp dinput8_functions[1];
-  }
+    _asm {
+        jmp dinput8_functions[1];
+    }
 }
 
 __declspec(naked) void __stdcall jumpDllGetClassObject() {
-  _asm {
-    jmp dinput8_functions[2];
-  }
+    _asm {
+        jmp dinput8_functions[2];
+    }
 }
 
 __declspec(naked) void __stdcall jumpDllRegisterServer() {
-  _asm {
-    jmp dinput8_functions[3];
-  }
+    _asm {
+        jmp dinput8_functions[3];
+    }
 }
 
 __declspec(naked) void __stdcall jumpDllUnregisterServer() {
-  _asm {
-    jmp dinput8_functions[4];
-  }
+    _asm {
+        jmp dinput8_functions[4];
+    }
 }
 
 // =================================
@@ -73,11 +72,11 @@ __declspec(naked) void __stdcall jumpDllUnregisterServer() {
 // =================================
 
 DWORD WINAPI peerThread(Peer* __peer) {
-  __peer->start();
+    __peer->start();
 
-  while (true) {
-    __peer->update();
-  }
+    while (true) {
+        __peer->update();
+    }
 }
 
 // =================================
@@ -91,43 +90,47 @@ t_event event_post_initialize_trampoline;
 t_event event_update_trampoline;
 
 void eventPreInitialize() {
-  TRAVELLER_LOG("Running pre-initialization.");
+    TRAVELLER_LOG("Running pre-initialization.");
 
-  event_pre_initialize_trampoline();
+    event_pre_initialize_trampoline();
 }
 
 Peer* peer = nullptr;
 
 void eventPostInitialize() {
-  TRAVELLER_LOG("Running post-initialization.");
+    TRAVELLER_LOG("Running post-initialization.");
 
-  for (int i = 1; i < *raw_api::argc; ++i) {
-    std::string argument = (*raw_api::argv)[i];
-    argument.erase(0, 1);
+    *RawAPI::isWindowed = true; // todo: make this configurable
 
-    if (argument == "server") {
-      peer = new Server("0.0.0.0", 42069, 64); // todo: add cli flags to configure this
+    for (int i = 1; i < *RawAPI::argc; ++i) {
+        std::string argument = (*RawAPI::argv)[i] + 1;
+
+        if (argument == "server") {
+            peer = new Server("0.0.0.0", 42069, 64);
+        }
+        else if (argument == "client") {
+            peer = new Client("localhost", 42069);
+        }
     }
-  }
 
-  if (peer) {
-    //HANDLE thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)peerThread, peer, 0, 0);
-    peer->start();
-  }
+    if (peer) {
+        //HANDLE thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)peerThread, peer, 0, 0);
+        peer->start();
+    }
 }
 
 void eventUpdate() {
-  /*for (auto& object : ObjectManager::getObjects()) {
-    t_vec3 position = object.second.getPosition();
-    t_vec3 velocity = object.second.getVelocity();
-    TRAVELLER_LOG_DEBUG("Entity ID: %i", object.first);
-    TRAVELLER_LOG_DEBUG("Position: x: %f, y: %f, z: %f", position.x, position.y, position.z);
-    TRAVELLER_LOG_DEBUG("Velocity: x: %f, y: %f, z: %f", velocity.x, velocity.y, velocity.z);
-  }*/
+    /*for (auto& object : ObjectManager::getObjects()) {
+      t_vec3 position = object.second.getPosition();
+      t_vec3 velocity = object.second.getVelocity();
+      TRAVELLER_LOG_DEBUG("Entity ID: %i", object.first);
+      TRAVELLER_LOG_DEBUG("Position: x: %f, y: %f, z: %f", position.x, position.y, position.z);
+      TRAVELLER_LOG_DEBUG("Velocity: x: %f, y: %f, z: %f", velocity.x, velocity.y, velocity.z);
+    }*/
 
-  if (peer) peer->update();
+    if (peer) peer->update();
 
-  event_update_trampoline();
+    event_update_trampoline();
 }
 
 // =================================
@@ -138,56 +141,56 @@ void eventUpdate() {
 
 // copy pasted from ghidra
 void* apiObjectCreate(size_t* __parameter) {
-  size_t _Size;
-  int iVar1;
-  void* _Dst;
+    size_t _Size;
+    int iVar1;
+    void* _Dst;
 
-  if ((__parameter != (size_t*)0x0) && (_Size = *__parameter, _Size != 0)) {
-    _Dst = (void*)__parameter[1];
-    iVar1 = 0;
-    do {
-      if ((*(char*)((int)_Dst + 0x1fc) & 1) == 0) {
-        memset(_Dst, 0, _Size);
-        *(uint32_t*)((int)_Dst + 0x1fc) = *(uint32_t*)((int)_Dst + 0x1fc) | 1;
-        *(char*)((int)_Dst + 0x28d) = (char)iVar1;
-        ObjectManager::registerObject((GameObject_s*)_Dst); // notify object manager
-        return _Dst;
-      }
-      iVar1 = iVar1 + 1;
-      _Dst = (void*)((int)_Dst + _Size);
-    } while (iVar1 < 0x40);
-  }
+    if ((__parameter != (size_t*)0x0) && (_Size = *__parameter, _Size != 0)) {
+        _Dst = (void*)__parameter[1];
+        iVar1 = 0;
+        do {
+            if ((*(char*)((int)_Dst + 0x1fc) & 1) == 0) {
+                memset(_Dst, 0, _Size);
+                *(uint32_t*)((int)_Dst + 0x1fc) = *(uint32_t*)((int)_Dst + 0x1fc) | 1;
+                *(char*)((int)_Dst + 0x28d) = (char)iVar1;
+                ObjectManager::registerObject((GameObject_s*)_Dst); // notify object manager
+                return _Dst;
+            }
+            iVar1 = iVar1 + 1;
+            _Dst = (void*)((int)_Dst + _Size);
+        } while (iVar1 < 0x40);
+    }
 
-  return (void*)0x0;
+    return (void*)0x0;
 }
 
 // also copy pasted from ghidra
 void apiObjectDestroy(size_t* __parameter_0, void* __parameter_1) {
-  byte bVar1;
-  int iVar2;
-  size_t sVar3;
+    byte bVar1;
+    int iVar2;
+    size_t sVar3;
 
-  ObjectManager::unregisterObject((GameObject_s*)__parameter_1);
+    ObjectManager::unregisterObject((GameObject_s*)__parameter_1);
 
-  if (((__parameter_0 != (size_t*)0x0) && (__parameter_1 != (void*)0x0)) && (*__parameter_0 != 0)) {
-    if (__parameter_0 != (size_t*)0xfffffff8) {
-      sVar3 = __parameter_0[1];
-      iVar2 = 0x40;
-      do {
-        if ((*(byte*)(sVar3 + 0x1fc) & 1) != 0) {
-          raw_api::FUN_0062a8c0((int)__parameter_0, sVar3, (int)__parameter_1);
+    if (((__parameter_0 != (size_t*)0x0) && (__parameter_1 != (void*)0x0)) && (*__parameter_0 != 0)) {
+        if (__parameter_0 != (size_t*)0xfffffff8) {
+            sVar3 = __parameter_0[1];
+            iVar2 = 0x40;
+            do {
+                if ((*(byte*)(sVar3 + 0x1fc) & 1) != 0) {
+                    RawAPI::FUN_0062a8c0((int)__parameter_0, sVar3, (int)__parameter_1);
+                }
+                sVar3 = sVar3 + *__parameter_0;
+                iVar2 = iVar2 + -1;
+            } while (iVar2 != 0);
+            bVar1 = *(byte*)((int)__parameter_1 + 0x28d);
+            __parameter_0[(uint32_t)bVar1 * 2 + 2] = 0;
+            __parameter_0[(uint32_t)bVar1 * 2 + 3] = 0;
         }
-        sVar3 = sVar3 + *__parameter_0;
-        iVar2 = iVar2 + -1;
-      } while (iVar2 != 0);
-      bVar1 = *(byte*)((int)__parameter_1 + 0x28d);
-      __parameter_0[(uint32_t)bVar1 * 2 + 2] = 0;
-      __parameter_0[(uint32_t)bVar1 * 2 + 3] = 0;
+        memset(__parameter_1, 0, *__parameter_0);
     }
-    memset(__parameter_1, 0, *__parameter_0);
-  }
 
-  return;
+    return;
 }
 
 // =================================
@@ -195,80 +198,83 @@ void apiObjectDestroy(size_t* __parameter_0, void* __parameter_1) {
 // =================================
 
 void initializeConsole() {
-  AllocConsole(); // spawns console on main process; todo: make this configurable
-  
-  // redirect stdin, stdout and stderr so we control them
-  FILE* dummy_file;
-  freopen_s(&dummy_file, "CONIN$", "r", stdin);
-  freopen_s(&dummy_file, "CONOUT$", "w", stdout);
-  freopen_s(&dummy_file, "CONOUT$", "w", stderr);
+    AllocConsole(); // spawns console on main process; todo: make this configurable
 
-  TRAVELLER_LOG("Initialized console.");
+    // redirect stdin, stdout and stderr so we control them
+    FILE* dummy_file;
+    freopen_s(&dummy_file, "CONIN$", "r", stdin);
+    freopen_s(&dummy_file, "CONOUT$", "w", stdout);
+    freopen_s(&dummy_file, "CONOUT$", "w", stderr);
+
+    TRAVELLER_LOG("Initialized console.");
 }
 
 void initializeDLLProxy() {
-  dinput8 = LoadLibraryA("C:\\Windows\\System32\\dinput8.dll"); // todo: check if this actually loads
+    dinput8 = LoadLibraryA("C:\\Windows\\System32\\dinput8.dll"); // todo: check if this actually loads
 
-  if (dinput8) {
-    TRAVELLER_LOG("Successfully loaded dinput8.dll for call redirects.");
-  }
-  else {
-    TRAVELLER_LOG_ERROR("Failed to load dinput8.dll for call redirects!");
-  }
+    if (dinput8) {
+        TRAVELLER_LOG("Successfully loaded dinput8.dll for call redirects.");
+    }
+    else {
+        TRAVELLER_LOG_ERROR("Failed to load dinput8.dll for call redirects!");
+    }
 
-  // assign addresses of functions
-  dinput8_functions[0] = GetProcAddress(dinput8, "DirectInput8Create");
-  dinput8_functions[1] = GetProcAddress(dinput8, "DllCanUnloadNow");
-  dinput8_functions[2] = GetProcAddress(dinput8, "DllGetClassObject");
-  dinput8_functions[3] = GetProcAddress(dinput8, "DllRegisterServer");
-  dinput8_functions[4] = GetProcAddress(dinput8, "DllUnregisterServer");
+    // assign addresses of functions
+    dinput8_functions[0] = GetProcAddress(dinput8, "DirectInput8Create");
+    dinput8_functions[1] = GetProcAddress(dinput8, "DllCanUnloadNow");
+    dinput8_functions[2] = GetProcAddress(dinput8, "DllGetClassObject");
+    dinput8_functions[3] = GetProcAddress(dinput8, "DllRegisterServer");
+    dinput8_functions[4] = GetProcAddress(dinput8, "DllUnregisterServer");
 }
 
 void installHooks() {
-  /*
-  PVOID api_object_create = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS;
-  PVOID api_object_destroy = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS;
-  PVOID event_pre_initialize = (PVOID)TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS;
-  PVOID event_post_initialize = (PVOID)TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS;
-  PVOID event_update = (PVOID)TRAVELLER_EVENT_UPDATE_ADDRESS;
+    /*
+    PVOID api_object_create = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS;
+    PVOID api_object_destroy = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS;
+    PVOID event_pre_initialize = (PVOID)TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS;
+    PVOID event_post_initialize = (PVOID)TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS;
+    PVOID event_update = (PVOID)TRAVELLER_EVENT_UPDATE_ADDRESS;
 
-  DetourRestoreAfterWith();
+    DetourRestoreAfterWith();
 
-  DetourTransactionBegin();
-  DetourUpdateThread(GetCurrentThread());
-  DetourAttach(&api_object_create, apiObjectCreate);
-  DetourAttach(&api_object_destroy, apiObjectDestroy);
-  DetourAttachEx(&event_pre_initialize, eventPreInitialize, &event_pre_initialize_trampoline, nullptr, nullptr);
-  DetourAttachEx(&event_post_initialize, eventPostInitialize, &event_post_initialize_trampoline, nullptr, nullptr);
-  DetourAttachEx(&event_update, eventUpdate, &event_update_trampoline, nullptr, nullptr);
-  DetourTransactionCommit();*/
+    DetourTransactionBegin();
+    DetourUpdateThread(GetCurrentThread());
+    DetourAttach(&api_object_create, apiObjectCreate);
+    DetourAttach(&api_object_destroy, apiObjectDestroy);
+    DetourAttachEx(&event_pre_initialize, eventPreInitialize, &event_pre_initialize_trampoline, nullptr, nullptr);
+    DetourAttachEx(&event_post_initialize, eventPostInitialize, &event_post_initialize_trampoline, nullptr, nullptr);
+    DetourAttachEx(&event_update, eventUpdate, &event_update_trampoline, nullptr, nullptr);
+    DetourTransactionCommit();*/
 
-  // engine event hooks
-  event_pre_initialize_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS, eventPreInitialize);
-  Hook::replaceCall(TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS, eventPostInitialize);
-  event_update_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_UPDATE_ADDRESS, eventUpdate, 7);
-  
-  // engine function hooks
-  Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS, apiObjectCreate);
-  Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS, apiObjectDestroy);
+    // engine event hooks
+    event_pre_initialize_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS, eventPreInitialize);
+    Hook::replaceCall(TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS, eventPostInitialize);
+    event_update_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_UPDATE_ADDRESS, eventUpdate, 7);
+
+    // engine function hooks
+    Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS, apiObjectCreate);
+    Hook::detour(TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS, apiObjectDestroy);
+
+    // nop inserts
+    Hook::insertNOP(TRAVELLER_SET_WINDOW_FOCUSED_ADDRESS, 6); // disable freeze on window unfocus
 }
 
 void removeHooks() {
-  /*
-  PVOID api_object_create = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS;
-  PVOID api_object_destroy = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS;
-  PVOID event_pre_initialize = (PVOID)TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS;
-  PVOID event_post_initialize = (PVOID)TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS;
-  PVOID event_update = (PVOID)TRAVELLER_EVENT_UPDATE_ADDRESS;
+    /*
+    PVOID api_object_create = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS;
+    PVOID api_object_destroy = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS;
+    PVOID event_pre_initialize = (PVOID)TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS;
+    PVOID event_post_initialize = (PVOID)TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS;
+    PVOID event_update = (PVOID)TRAVELLER_EVENT_UPDATE_ADDRESS;
 
-  DetourTransactionBegin();
-  DetourUpdateThread(GetCurrentThread());
-  DetourDetach(&api_object_create, apiObjectCreate);
-  DetourDetach(&api_object_destroy, apiObjectDestroy);
-  DetourDetach(&event_pre_initialize, eventPreInitialize);
-  DetourDetach(&event_post_initialize, eventPostInitialize);
-  DetourDetach(&event_update, eventUpdate);
-  DetourTransactionCommit();*/
+    DetourTransactionBegin();
+    DetourUpdateThread(GetCurrentThread());
+    DetourDetach(&api_object_create, apiObjectCreate);
+    DetourDetach(&api_object_destroy, apiObjectDestroy);
+    DetourDetach(&event_pre_initialize, eventPreInitialize);
+    DetourDetach(&event_post_initialize, eventPostInitialize);
+    DetourDetach(&event_update, eventUpdate);
+    DetourTransactionCommit();*/
 }
 
 // =================================
@@ -276,22 +282,22 @@ void removeHooks() {
 // =================================
 
 BOOL WINAPI DllMain(HMODULE __module, DWORD __reason, LPVOID __load_type) {
-  //if (DetourIsHelperProcess()) return TRUE;
+    //if (DetourIsHelperProcess()) return TRUE;
 
-  switch (__reason) {
-    case DLL_PROCESS_ATTACH:
-      initializeConsole();
-      initializeDLLProxy();
-      installHooks();
-      break;
-    case DLL_PROCESS_DETACH:
-      removeHooks();
-      FreeLibrary(dinput8); // free loaded DLL
-      TRAVELLER_LOG("Freed redirect dinput8.dll.");
-      break;
-    default:
-      break;
-  }
+    switch (__reason) {
+        case DLL_PROCESS_ATTACH:
+            initializeConsole();
+            initializeDLLProxy();
+            installHooks();
+            break;
+        case DLL_PROCESS_DETACH:
+            removeHooks();
+            FreeLibrary(dinput8); // free loaded DLL
+            TRAVELLER_LOG("Freed redirect dinput8.dll.");
+            break;
+        default:
+            break;
+    }
 
-  return TRUE;
+    return TRUE;
 }

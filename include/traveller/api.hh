@@ -1,5 +1,5 @@
 // averysumner - traveller
-// api.hh
+// include/traveller/api.hh
 // contains high level modding API
 // Copyright 2021 averysumner
 //

@@ -1,0 +1,3 @@
+[submodule "third_party/RakNet"]
+	path = third_party/RakNet
+	url = https://github.com/codeshaunted/RakNet

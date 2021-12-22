@@ -1,5 +1,5 @@
 // averysumner - traveller
-// logger.cc
+// source/traveller/logger.cc
 // contains logger class definitions
 // Copyright 2021 averysumner
 //

@@ -1,5 +1,5 @@
 // averysumner - traveller
-// object_manager.hh
+// include/traveller/object_manager.hh
 // contains object manager declarations
 // Copyright 2021 averysumner
 //
@@ -25,14 +25,14 @@
 namespace traveller {
 
 class ObjectManager {
-  public:
-    static std::unordered_map<t_objid, Object>& getObjects();
-    static void registerObject(GameObject_s* __game_object);
-    static void unregisterObject(GameObject_s* __game_object);
-  private:
-    static t_objid nextID();
-    static t_objid _next_id;
-    static std::unordered_map<t_objid, Object> _objects;
+    public:
+        static std::unordered_map<t_objid, Object>& getObjects();
+        static void registerObject(GameObject_s* __game_object);
+        static void unregisterObject(GameObject_s* __game_object);
+    private:
+        static t_objid nextID();
+        static t_objid _next_id;
+        static std::unordered_map<t_objid, Object> _objects;
 };
 
 } // namespace traveller

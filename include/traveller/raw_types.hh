@@ -1,5 +1,5 @@
 // averysumner - traveller
-// raw_types.hh
+// include/traveller/raw_types.hh
 // contains raw types for nu2
 // Copyright 2021 averysumner
 //
@@ -25,9 +25,9 @@
 namespace traveller {
 
 struct nuvec_s {
-  float x;
-  float y;
-  float z;
+    float x;
+    float y;
+    float z;
 };
 
 struct nugspline_s {};
@@ -43,25 +43,25 @@ struct LEVELDATA_s {};
 struct APIOBJECTSYS_s {};
 
 struct WORLDINFO_s {
-  uint8_t field_0[0x10f];
-  BOOL loaded;
-  uint8_t field_2[0x14];
-  LEVELDATA_s* level_data;
-  LEVELDATA_s* alternate_level_data;
-  uint8_t field_5[0x285d];
-  APIOBJECTSYS_s* api_object_system;
+    uint8_t field_0[0x10f];
+    BOOL loaded;
+    uint8_t field_2[0x14];
+    LEVELDATA_s* level_data;
+    LEVELDATA_s* alternate_level_data;
+    uint8_t field_5[0x285d];
+    APIOBJECTSYS_s* api_object_system;
 };
 
 struct GameObject_s {
-  uint8_t field_0[0x57];
-  CHARACTERDATA_s* character_data;
-  nuvec_s position;
-  nuvec_s velocity;
-  uint8_t field_4[0x181];
-  uint32_t unknown_flag_0;
-  uint8_t field_5[0x8d];
-  uint32_t object_index;
-  uint8_t field_6[0xe4f];
+    uint8_t field_0[0x57];
+    CHARACTERDATA_s* character_data;
+    nuvec_s position;
+    nuvec_s velocity;
+    uint8_t field_4[0x181];
+    uint32_t unknown_flag_0;
+    uint8_t field_5[0x8d];
+    uint32_t object_index;
+    uint8_t field_6[0xe4f];
 };
 
 } // namespace traveller

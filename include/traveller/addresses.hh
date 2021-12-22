@@ -1,5 +1,5 @@
 // averysumner - traveller
-// addresses.hh
+// include/traveller/addresses.hh
 // contains hardcoded exe addresses
 // Copyright 2021 averysumner
 //
@@ -23,5 +23,6 @@
 #define TRAVELLER_EVENT_UPDATE_ADDRESS 0x0057d230
 #define TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS 0x0062a870
 #define TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS 0x0062a910
+#define TRAVELLER_SET_WINDOW_FOCUSED_ADDRESS 0x006de253
 
 #endif // TRAVELLER_ADDRESSES_HH

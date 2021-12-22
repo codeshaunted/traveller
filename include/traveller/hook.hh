@@ -1,5 +1,5 @@
 // averysumner - traveller
-// hook.hh
+// include/traveller/hook.hh
 // contains hook class declarations
 // Copyright 2021 averysumner
 //
@@ -24,15 +24,16 @@ namespace traveller {
 
 #pragma pack(1)
 struct s_JMPInstruction {
-  uint8_t op_code = 0xe9;
-  uintptr_t address;
+    uint8_t op_code = 0xe9;
+    uintptr_t address;
 };
 
 class Hook {
-  public:
-    static bool detour(uintptr_t __source, void* __destination, int length = 5);
-    static void* trampoline(uintptr_t __source, void* __destination, int length = 5);
-    static void replaceCall(uintptr_t __source, void* __destination);
+    public:
+        static bool detour(uintptr_t __source, void* __destination, int __length = 5);
+        static void* trampoline(uintptr_t __source, void* __destination, int __length = 5);
+        static void replaceCall(uintptr_t __source, void* __destination);
+        static void insertNOP(uintptr_t __destination, int __length);
 };
 
 } // namespace traveller
