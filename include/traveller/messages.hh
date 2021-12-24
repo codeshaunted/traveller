@@ -22,13 +22,16 @@
 #include "BitStream.h"
 #include "RakNetTypes.h"
 
+#include "raw_types.hh"
+
 namespace traveller {
 
 enum class MessageID : uint8_t {
     SET_LEVEL = ID_USER_PACKET_ENUM + 1,
     CONSTRUCT_OBJECT,
     DESTRUCT_OBJECT,
-    UPDATE_OBJECT
+    UPDATE_OBJECT,
+    POSITION_UPDATE_TEST
 };
 
 class Message {
@@ -45,6 +48,7 @@ class MessageSetLevel : public Message {
         MessageSetLevel(uint32_t __level_id = 0) : Message(MessageID::SET_LEVEL), level_id(__level_id) {}
         void serialize(RakNet::BitStream& __bitstream) const override {
             __bitstream.Write((RakNet::MessageID)_message_id);
+
             if (level_id != 0) {
                 __bitstream.Write1();
                 __bitstream.Write(level_id);
@@ -61,10 +65,46 @@ class MessageSetLevel : public Message {
         uint32_t level_id;
 };
 
+class MessagePositionUpdateTest : public Message {
+public:
+    MessagePositionUpdateTest(nuvec_s __position = nuvec_s(), nuvec_s __velocity = nuvec_s()) : Message(MessageID::POSITION_UPDATE_TEST), position(__position), velocity(velocity) {}
+    void serialize(RakNet::BitStream& __bitstream) const override {
+        __bitstream.Write((RakNet::MessageID)_message_id);
+
+        if (position.x != 0 && position.y != 0 && position.z != 0) {
+            __bitstream.Write1();
+            __bitstream.Write(position);
+        }
+        else {
+            __bitstream.Write0();
+        }
+
+        if (velocity.x != 0 && velocity.y != 0 && velocity.z != 0) {
+            __bitstream.Write1();
+            __bitstream.Write(velocity);
+        }
+        else {
+            __bitstream.Write0();
+        }
+    }
+    void deserialize(RakNet::BitStream& __bitstream) override {
+        if (__bitstream.ReadBit()) {
+            __bitstream.Read(position);
+        }
+        
+        if (__bitstream.ReadBit()) {
+            __bitstream.Read(velocity);
+        }
+    }
+    nuvec_s position;
+    nuvec_s velocity;
+};
+
 class Messages {
     public:
         static void handle(RakNet::BitStream& __bitstream);
         static void handleSetLevel(const MessageSetLevel& __message);
+        static void handlePositionUpdateTest(const MessagePositionUpdateTest& __message);
 };
 
 } // namespace traveller

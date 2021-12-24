@@ -19,6 +19,7 @@
 
 #include "raw_api.hh"
 #include "logger.hh"
+#include "object_manager.hh"
 
 namespace traveller {
 
@@ -35,6 +36,12 @@ void Messages::handle(RakNet::BitStream& __bitstream) {
             Messages::handleSetLevel(message);
             break;
         }
+        case MessageID::POSITION_UPDATE_TEST: {
+            MessagePositionUpdateTest message;
+            message.deserialize(__bitstream);
+            Messages::handlePositionUpdateTest(message);
+            break;
+        }
         default: {
             TRAVELLER_LOG_ERROR("Unhandled message ID: %u", message_id);
             break;
@@ -45,6 +52,19 @@ void Messages::handle(RakNet::BitStream& __bitstream) {
 void Messages::handleSetLevel(const MessageSetLevel& __message) {
     TRAVELLER_LOG("GOT SETLEVEL");
     RawAPI::GoToNewLevel(__message.level_id);
+}
+
+void Messages::handlePositionUpdateTest(const MessagePositionUpdateTest& __message) {
+    TRAVELLER_LOG("GOT POSITIONUPDATETEST");
+    
+    //for (auto& object : ObjectManager::getObjects()) {
+    //    object.second.setPosition(__message.position);
+    //}
+
+    if (*RawAPI::player1) {
+        (*RawAPI::player1)->position = __message.position;
+        (*RawAPI::player1)->velocity = __message.velocity;
+    }
 }
 
 } // namespace traveller

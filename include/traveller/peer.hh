@@ -28,28 +28,14 @@ namespace traveller {
 class Peer {
     public:
         Peer(bool __is_server) : _is_server(__is_server) {}
-        virtual void start() {};
-        virtual void update() {};
-        virtual void stop() {};
-        bool getIsServer() { return _is_server; }
-        void send(const RakNet::BitStream& __bitstream, const RakNet::SystemAddress& __system_address, bool __broadcast = false) {
-            TRAVELLER_LOG("BITSTREAM LENGTH: %u", __bitstream.GetNumberOfBytesUsed());
-            _interface->Send(&__bitstream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, __system_address, __broadcast);
-        }
-        void send(const RakNet::BitStream& __bitstream) { // broadcasts
-            send(__bitstream, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
-        }
-        void send(const Message& message, const RakNet::SystemAddress& __system_address, bool __broadcast = false) {
-            RakNet::BitStream bitstream;
-            message.serialize(bitstream);
-
-            //TRAVELLER_LOG("TEST %u", ((MessageSetLevel*)message)-level_id);
-
-            send(bitstream, __system_address, __broadcast);
-        }
-        void send(const Message& message) { // broadcasts
-            send(message, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
-        }
+        virtual void start();
+        virtual void update();
+        virtual void stop();
+        bool getIsServer();
+        void send(const RakNet::BitStream& __bitstream, const RakNet::SystemAddress& __system_address, bool __broadcast = false);
+        void send(const RakNet::BitStream& __bitstream);
+        void send(const Message& message, const RakNet::SystemAddress& __system_address, bool __broadcast = false);
+        void send(const Message& message);
     protected:
         RakNet::RakPeerInterface* _interface;
         bool _is_server;

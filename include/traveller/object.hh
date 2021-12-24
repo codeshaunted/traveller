@@ -19,7 +19,6 @@
 #define TRAVELLER_OBJECT_HH
 
 #include "raw_types.hh"
-#include "types.hh"
 
 namespace traveller {
 
@@ -29,8 +28,10 @@ class Object {
     public:
         Object(GameObject_s* __game_object) : _game_object(__game_object) {}
         GameObject_s* getGameObject();
-        t_vec3 getPosition();
-        t_vec3 getVelocity();
+        nuvec_s getPosition();
+        nuvec_s getVelocity();
+        void setPosition(nuvec_s __position);
+        void setVelocity(nuvec_s __velocity);
     private:
         GameObject_s* _game_object;
 };

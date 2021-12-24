@@ -47,6 +47,7 @@ class RawAPI {
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x00827610, BOOL, gBWindowHasFocus);
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x02976720, D3DPRESENT_PARAMETERS, presentParams); // this is actually part of the CD3DCore class
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x02976c44, bool, isWindowed); // this is actually part of the CD3DCore class
+        TRAVELLER_REGISTER_RAW_API_GLOBAL(0x0093d830, GameObject_s*, player1);
         GameObject_s(**Obj)[64] = (GameObject_s(**)[64])0x0093d524;
 };
 

@@ -43,7 +43,7 @@ void Server::update() {
             case ID_NEW_INCOMING_CONNECTION: {
                 TRAVELLER_LOG("A new client has connected from %s.", packet->systemAddress.ToString());
                 MessageSetLevel message = MessageSetLevel(*RawAPI::Level);
-                send(message, packet->systemAddress, true);
+                send(message);
                 break;
             }
             case ID_CONNECTION_LOST:
@@ -54,6 +54,11 @@ void Server::update() {
                 Messages::handle(bitstream);
                 break;
         }
+    }
+
+    if (*RawAPI::player1) {
+        MessagePositionUpdateTest position_message((*RawAPI::player1)->position, (*RawAPI::player1)->velocity);
+        send(position_message);
     }
 }
 

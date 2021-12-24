@@ -66,6 +66,8 @@ struct GameObject_s {
 
 struct MENU_s {};
 
+class CD3DCore {};
+
 } // namespace traveller
 
 #endif // TRAVELLER_RAW_TYPES_HH

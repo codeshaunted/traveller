@@ -23,12 +23,20 @@ GameObject_s* Object::getGameObject() {
     return _game_object;
 }
 
-t_vec3 Object::getPosition() {
-    return *(t_vec3*)&_game_object->position;
+nuvec_s Object::getPosition() {
+    return _game_object->position;
 }
 
-t_vec3 Object::getVelocity() {
-    return *(t_vec3*)&_game_object->velocity;
+nuvec_s Object::getVelocity() {
+    return _game_object->velocity;
+}
+
+void Object::setPosition(nuvec_s __position) {
+    _game_object->position = __position;
+}
+
+void Object::setVelocity(nuvec_s __velocity) {
+    _game_object->velocity = __velocity;
 }
 
 } // namespace traveller

@@ -37,6 +37,7 @@ void Client::start() {
 void Client::update() {
     for (RakNet::Packet* packet = _interface->Receive(); packet; _interface->DeallocatePacket(packet), packet = _interface->Receive()) {
         uint8_t message_id = packet->data[0];
+        TRAVELLER_LOG("RECEIVED PACKET");
 
         switch (message_id) {
             case ID_CONNECTION_REQUEST_ACCEPTED:

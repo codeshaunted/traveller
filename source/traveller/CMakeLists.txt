@@ -21,6 +21,7 @@ set(TRAVELLER_SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/hook.cc"
     "${CMAKE_CURRENT_SOURCE_DIR}/object.cc"
     "${CMAKE_CURRENT_SOURCE_DIR}/object_manager.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/peer.cc"
     "${CMAKE_CURRENT_SOURCE_DIR}/server.cc"
     "${CMAKE_CURRENT_SOURCE_DIR}/client.cc"
     "${CMAKE_CURRENT_SOURCE_DIR}/messages.cc"
