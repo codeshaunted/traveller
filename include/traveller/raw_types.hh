@@ -24,22 +24,29 @@
 
 namespace traveller {
 
+#pragma pack(1)
 struct nuvec_s {
     float x;
     float y;
     float z;
 };
 
+#pragma pack(1)
 struct nugspline_s {};
 
+#pragma pack(1)
 struct CHARACTERDATA_s {};
 
+#pragma pack(1)
 struct AIPATHINFO_s {};
 
+#pragma pack(1)
 struct AIGROUP_s {};
 
+#pragma pack(1)
 struct LEVELDATA_s {};
 
+#pragma pack(1)
 struct APIOBJECTSYS_s {};
 
 #pragma pack(1)
@@ -63,8 +70,10 @@ struct GameObject_s {
     uint16_t character_id;
 };
 
+#pragma pack(1)
 struct MENU_s {};
 
+#pragma pack(1)
 class CD3DCore {};
 
 } // namespace traveller
