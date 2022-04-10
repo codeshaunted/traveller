@@ -36,10 +36,10 @@ void Messages::handle(RakNet::BitStream& __bitstream) {
             Messages::handleSetLevel(message);
             break;
         }
-        case MessageID::POSITION_UPDATE_TEST: {
-            MessagePositionUpdateTest message;
+        case MessageID::CONSTRUCT_OBJECT: {
+            MessageConstructObject message;
             message.deserialize(__bitstream);
-            Messages::handlePositionUpdateTest(message);
+            Messages::handleConstructObject(message);
             break;
         }
         default: {
@@ -50,21 +50,13 @@ void Messages::handle(RakNet::BitStream& __bitstream) {
 }
 
 void Messages::handleSetLevel(const MessageSetLevel& __message) {
-    TRAVELLER_LOG("GOT SETLEVEL");
+    TRAVELLER_LOG("Changing level to level ID %u.", __message.level_id);
     RawAPI::GoToNewLevel(__message.level_id);
 }
 
-void Messages::handlePositionUpdateTest(const MessagePositionUpdateTest& __message) {
-    TRAVELLER_LOG("GOT POSITIONUPDATETEST");
-    
-    //for (auto& object : ObjectManager::getObjects()) {
-    //    object.second.setPosition(__message.position);
-    //}
-
-    if (*RawAPI::player1) {
-        (*RawAPI::player1)->position = __message.position;
-        (*RawAPI::player1)->velocity = __message.velocity;
-    }
+void Messages::handleConstructObject(const MessageConstructObject& __message) {
+    GameObject_s* game_object = RawAPI::AddCreature(__message.character_id, true);
+    game_object->position = __message.position;
 }
 
 } // namespace traveller

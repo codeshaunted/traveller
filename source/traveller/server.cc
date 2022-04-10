@@ -22,6 +22,7 @@
 #include "logger.hh"
 #include "messages.hh"
 #include "raw_api.hh"
+#include "object_manager.hh"
 
 namespace traveller {
 
@@ -42,8 +43,8 @@ void Server::update() {
         switch (message_id) {
             case ID_NEW_INCOMING_CONNECTION: {
                 TRAVELLER_LOG("A new client has connected from %s.", packet->systemAddress.ToString());
-                MessageSetLevel message = MessageSetLevel(*RawAPI::Level);
-                send(message);
+                MessageSetLevel message(*RawAPI::Level);
+                send(message); // todo: fix so i don't have to broadcast
                 break;
             }
             case ID_CONNECTION_LOST:
@@ -51,14 +52,11 @@ void Server::update() {
                 break;
             default:
                 RakNet::BitStream bitstream(packet->data, packet->length, false);
-                Messages::handle(bitstream);
+                _handleMessage(bitstream);
                 break;
         }
-    }
 
-    if (*RawAPI::player1) {
-        MessagePositionUpdateTest position_message((*RawAPI::player1)->position, (*RawAPI::player1)->velocity);
-        send(position_message);
+        _callCallbacks();
     }
 }
 
@@ -66,6 +64,32 @@ void Server::stop() {
     RakNet::RakPeerInterface::DestroyInstance(_interface);
 
     TRAVELLER_LOG("Stopping server.");
+}
+
+void Server::_handleMessage(RakNet::BitStream& __bitstream) {
+    MessageID message_id;
+    __bitstream.Read(message_id);
+
+    TRAVELLER_LOG_DEBUG("GOT MESSAGE WITH ID: %u", message_id);
+
+    switch (message_id) {
+        case MessageID::LEVEL_SET: {
+            MessageLevelSet message;
+            message.deserialize(__bitstream);
+
+            for (auto& object : ObjectManager::getObjects()) {
+                TRAVELLER_LOG_DEBUG("%u", object.second.getGameObject()->character_id);
+                MessageConstructObject construct_object_message(object.first, object.second.getGameObject()->character_id, object.second.getPosition());
+                send(construct_object_message); // todo: fix so i don't have to broadcast
+            }
+
+            break;
+        }
+        default: {
+            TRAVELLER_LOG_ERROR("Unhandled message ID: %u", message_id);
+            break;
+        }
+    }
 }
 
 } // namespace traveller

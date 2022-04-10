@@ -23,11 +23,13 @@
 #include "RakNetTypes.h"
 
 #include "raw_types.hh"
+#include "object.hh"
 
 namespace traveller {
 
 enum class MessageID : uint8_t {
     SET_LEVEL = ID_USER_PACKET_ENUM + 1,
+    LEVEL_SET,
     CONSTRUCT_OBJECT,
     DESTRUCT_OBJECT,
     UPDATE_OBJECT,
@@ -65,23 +67,15 @@ class MessageSetLevel : public Message {
         uint32_t level_id;
 };
 
-class MessagePositionUpdateTest : public Message {
+class MessageLevelSet : public Message {
 public:
-    MessagePositionUpdateTest(nuvec_s __position = nuvec_s(), nuvec_s __velocity = nuvec_s()) : Message(MessageID::POSITION_UPDATE_TEST), position(__position), velocity(velocity) {}
+    MessageLevelSet(uint32_t __level_id = 0) : Message(MessageID::LEVEL_SET), level_id(__level_id) {}
     void serialize(RakNet::BitStream& __bitstream) const override {
         __bitstream.Write((RakNet::MessageID)_message_id);
 
-        if (position.x != 0 && position.y != 0 && position.z != 0) {
+        if (level_id != 0) {
             __bitstream.Write1();
-            __bitstream.Write(position);
-        }
-        else {
-            __bitstream.Write0();
-        }
-
-        if (velocity.x != 0 && velocity.y != 0 && velocity.z != 0) {
-            __bitstream.Write1();
-            __bitstream.Write(velocity);
+            __bitstream.Write(level_id);
         }
         else {
             __bitstream.Write0();
@@ -89,22 +83,66 @@ public:
     }
     void deserialize(RakNet::BitStream& __bitstream) override {
         if (__bitstream.ReadBit()) {
-            __bitstream.Read(position);
-        }
-        
-        if (__bitstream.ReadBit()) {
-            __bitstream.Read(velocity);
+            __bitstream.Read(level_id);
         }
     }
-    nuvec_s position;
-    nuvec_s velocity;
+    uint32_t level_id;
+};
+
+class MessageConstructObject : public Message {
+    public:
+        MessageConstructObject(t_objid __object_id = 0, uint16_t __character_id = 0, nuvec_s __position = nuvec_s()) : Message(MessageID::CONSTRUCT_OBJECT), object_id(__object_id), character_id(__character_id), position(__position) {}
+        void serialize(RakNet::BitStream& __bitstream) const override {
+            __bitstream.Write((RakNet::MessageID)_message_id);
+
+            if (object_id != 0) {
+                __bitstream.Write1();
+                __bitstream.Write(object_id);
+            }
+            else {
+                __bitstream.Write0();
+            }
+
+            if (character_id != 0) {
+                __bitstream.Write1();
+                __bitstream.Write(character_id);
+            }
+            else {
+                __bitstream.Write0();
+            }
+
+            if (position.x != 0 && position.y != 0 && position.z != 0) {
+                __bitstream.Write1();
+                __bitstream.Write(position);
+            }
+            else {
+                __bitstream.Write0();
+            }
+        }
+        void deserialize(RakNet::BitStream& __bitstream) override {
+            if (__bitstream.ReadBit()) {
+                __bitstream.Read(object_id);
+            }
+
+            if (__bitstream.ReadBit()) {
+                __bitstream.Read(character_id);
+            }
+
+            if (__bitstream.ReadBit()) {
+                __bitstream.Read(position);
+            }
+        }
+        t_objid object_id;
+        uint16_t character_id;
+        nuvec_s position;
 };
 
 class Messages {
     public:
         static void handle(RakNet::BitStream& __bitstream);
         static void handleSetLevel(const MessageSetLevel& __message);
-        static void handlePositionUpdateTest(const MessagePositionUpdateTest& __message);
+        static void handleConstructObject(const MessageConstructObject& __message);
+
 };
 
 } // namespace traveller

@@ -42,6 +42,7 @@ struct LEVELDATA_s {};
 
 struct APIOBJECTSYS_s {};
 
+#pragma pack(1)
 struct WORLDINFO_s {
     uint8_t field_0[0x10f];
     BOOL loaded;
@@ -52,16 +53,14 @@ struct WORLDINFO_s {
     APIOBJECTSYS_s* api_object_system;
 };
 
+#pragma pack(1)
 struct GameObject_s {
-    uint8_t field_0[0x57];
+    uint8_t field_0[0x58];
     CHARACTERDATA_s* character_data;
     nuvec_s position;
     nuvec_s velocity;
-    uint8_t field_4[0x181];
-    uint32_t unknown_flag_0;
-    uint8_t field_5[0x8d];
-    uint32_t object_index;
-    uint8_t field_6[0xe4f];
+    uint8_t field_1[0xff0];
+    uint16_t character_id;
 };
 
 struct MENU_s {};

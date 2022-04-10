@@ -48,6 +48,9 @@ class RawAPI {
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x02976720, D3DPRESENT_PARAMETERS, presentParams); // this is actually part of the CD3DCore class
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x02976c44, bool, isWindowed); // this is actually part of the CD3DCore class
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x0093d830, GameObject_s*, player1);
+        TRAVELLER_REGISTER_RAW_API_GLOBAL(0x0093d868, uint32_t, next_level);
+        TRAVELLER_REGISTER_RAW_API_GLOBAL(0x00951ba0, LEVELDATA_s*, NewLData);
+        TRAVELLER_REGISTER_RAW_API_GLOBAL(0x0297659c, bool, do_log); // artificial
         GameObject_s(**Obj)[64] = (GameObject_s(**)[64])0x0093d524;
 };
 

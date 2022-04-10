@@ -30,6 +30,8 @@ class Client : public Peer {
         void start();
         void update();
         void stop();
+    protected:
+        void _handleMessage(RakNet::BitStream& __bitstream);
     private:
         std::string _host;
         uint16_t _port;

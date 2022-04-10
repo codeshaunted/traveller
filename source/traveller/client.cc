@@ -20,6 +20,8 @@
 #include "MessageIdentifiers.h"
 
 #include "logger.hh"
+#include "raw_api.hh"
+#include "object_manager.hh"
 
 namespace traveller {
 
@@ -48,16 +50,63 @@ void Client::update() {
                 break;
             default:
                 RakNet::BitStream bitstream(packet->data, packet->length, false);
-                Messages::handle(bitstream);
+                _handleMessage(bitstream);
                 break;
         }
     }
+
+    _callCallbacks();
 }
 
 void Client::stop() {
     RakNet::RakPeerInterface::DestroyInstance(_interface);
 
     TRAVELLER_LOG("Stopping client.");
+}
+
+void Client::_handleMessage(RakNet::BitStream& __bitstream) {
+    MessageID message_id;
+    __bitstream.Read(message_id);
+
+    TRAVELLER_LOG_DEBUG("GOT MESSAGE WITH ID: %u", message_id);
+
+    switch (message_id) {
+        case MessageID::SET_LEVEL: {
+            MessageSetLevel message;
+            message.deserialize(__bitstream);
+            
+            TRAVELLER_LOG("Changing level to level ID %u.", message.level_id);
+            RawAPI::GoToNewLevel(message.level_id);
+
+            _addUpdateCallback([this](uint32_t __callback_id) {
+                if (*RawAPI::NewLData == 0) {
+                    MessageLevelSet level_set_message(*RawAPI::next_level);
+                    
+                    send(level_set_message);
+                    ObjectManager::clearObjects();
+                    _removeUpdateCallback(__callback_id);
+                }
+            });
+
+            break;
+        }
+        case MessageID::CONSTRUCT_OBJECT: {
+            MessageConstructObject message;
+            message.deserialize(__bitstream);
+
+            TRAVELLER_LOG_DEBUG("Constructing new object with character ID of %u.", message.character_id);
+            //GameObject_s* game_object = RawAPI::AddDynamicCreature(message.character_id, &message.position, 0, 0, nullptr, nullptr, 0, nullptr, nullptr, 0, 0);
+            GameObject_s* game_object = RawAPI::AddCreature(message.character_id, false);
+
+            //game_object->position = message.position;
+
+            break;
+        }
+        default: {
+            TRAVELLER_LOG_ERROR("Unhandled message ID: %u", message_id);
+            break;
+        }
+    }
 }
 
 } // namespace traveller

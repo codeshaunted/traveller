@@ -18,6 +18,9 @@
 #ifndef TRAVELLER_PEER_HH
 #define TRAVELLER_PEER_HH
 
+#include <functional>
+#include <unordered_map>
+
 #include "RakPeerInterface.h"
 
 #include "messages.hh"
@@ -37,8 +40,14 @@ class Peer {
         void send(const Message& message, const RakNet::SystemAddress& __system_address, bool __broadcast = false);
         void send(const Message& message);
     protected:
+        virtual void _handleMessage(RakNet::BitStream& __bitstream);
+        void _addUpdateCallback(std::function<void(uint32_t)> __update_callback);
+        void _removeUpdateCallback(uint32_t __callback_id);
+        void _callCallbacks();
         RakNet::RakPeerInterface* _interface;
         bool _is_server;
+        uint32_t _next_callback_id = 0;
+        std::unordered_map<uint32_t, std::function<void(uint32_t)>> _update_callbacks;
 };
 
 } // namespace traveller

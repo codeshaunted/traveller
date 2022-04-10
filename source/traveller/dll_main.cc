@@ -92,6 +92,8 @@ t_event event_update_trampoline;
 void eventPreInitialize() {
     TRAVELLER_LOG("Running pre-initialization.");
 
+    //*RawAPI::do_log = true;
+
     event_pre_initialize_trampoline();
 }
 
@@ -129,6 +131,16 @@ void eventUpdate() {
     }*/
 
     if (peer) peer->update();
+    
+    /*
+    for (auto& object : ObjectManager::getObjects()) {
+      nuvec_s position = object.second.getPosition();
+      nuvec_s velocity = object.second.getVelocity();
+      TRAVELLER_LOG_DEBUG("Entity ID: %u", object.first);
+      TRAVELLER_LOG_DEBUG("Character ID: %u", object.second.getGameObject()->character_id);
+      TRAVELLER_LOG_DEBUG("Position: x: %f, y: %f, z: %f", position.x, position.y, position.z);
+      TRAVELLER_LOG_DEBUG("Velocity: x: %f, y: %f, z: %f", velocity.x, velocity.y, velocity.z);
+    }*/
 
     event_update_trampoline();
 }

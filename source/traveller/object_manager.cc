@@ -18,6 +18,7 @@
 #include "object_manager.hh"
 
 #include "logger.hh"
+#include "raw_api.hh"
 
 namespace traveller {
 
@@ -27,16 +28,29 @@ std::unordered_map<t_objid, Object>& ObjectManager::getObjects() {
 
 void ObjectManager::registerObject(GameObject_s* __game_object) {
     t_objid id = nextID();
-    TRAVELLER_LOG_DEBUG("Registered new object with ID: %i.", id);
+    TRAVELLER_LOG_DEBUG("Registered new object with ID: %u.", id);
     _objects.insert({ id, Object(__game_object) });
 }
 
 void ObjectManager::unregisterObject(GameObject_s* __game_object) {
     for (auto& object : _objects) {
         if (object.second.getGameObject() == __game_object) {
-            TRAVELLER_LOG_DEBUG("Unregistered object with ID: %i.", object.first);
+            TRAVELLER_LOG_DEBUG("Unregistered object with ID: %u.", object.first);
             _objects.erase(object.first);
         }
+    }
+}
+
+void ObjectManager::removeObject(t_objid __object_id) {
+    GameObject_s* game_object = _objects.at(__object_id).getGameObject();
+
+    RawAPI::RemoveGameObject(game_object);
+    unregisterObject(game_object);
+}
+
+void ObjectManager::clearObjects() {
+    for (auto& object : _objects) {
+        removeObject(object.first);
     }
 }
 
