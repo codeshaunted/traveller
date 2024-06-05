@@ -28,7 +28,7 @@ std::unordered_map<t_objid, Object>& ObjectManager::getObjects() {
 
 void ObjectManager::registerObject(GameObject_s* __game_object) {
     t_objid id = nextID();
-    TRAVELLER_LOG_DEBUG("Registered new object with ID: %u.", id);
+    TRAVELLER_LOG_DEBUG("Registered new object with ID: %u. %p", id, __game_object);
     _objects.insert({ id, Object(__game_object) });
 }
 

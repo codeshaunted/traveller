@@ -34,10 +34,12 @@ set(TRAVELLER_COMPILE_DEFINITIONS
 set(TRAVELLER_INCLUDE_DIRECTORIES
     "${CMAKE_SOURCE_DIR}/include/traveller"
     "${CMAKE_SOURCE_DIR}/third_party/RakNet/Source"
+    "${CMAKE_SOURCE_DIR}/third_party/DynoHook/include"
     ${PROJECT_BINARY_DIR})
 
 set(TRAVELLER_LINK_LIBRARIES
-    RakNetLibStatic)
+    RakNetLibStatic
+    dynohook)
 
 add_library(dinput8 SHARED ${TRAVELLER_SOURCE_FILES})
 

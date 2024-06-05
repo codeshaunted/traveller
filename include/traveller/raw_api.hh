@@ -37,6 +37,7 @@ class RawAPI {
         TRAVELLER_REGISTER_RAW_API_FUNCTION(0x0041f8f0, GameObject_s*, AddCreature, uint32_t __creature_id, BOOL __can_respawn);
         TRAVELLER_REGISTER_RAW_API_FUNCTION(0x0043d890, GameObject_s*, AddDynamicCreature, uint32_t __creature_id, nuvec_s* __position, uint32_t __param_2, uint32_t __param_3, AIPATHINFO_s* __ai_path_info, AIGROUP_s* __ai_group, uint32_t __param_6, nugspline_s* __param_7, nuvec_s* __param_8, uint32_t __param_9, uint32_t __param_10);
         TRAVELLER_REGISTER_RAW_API_FUNCTION(0x0057a580, void, GoToNewLevel, uint32_t __level_id);
+        TRAVELLER_REGISTER_RAW_API_FUNCTION(0x0055c9f0, GameObject_s*, AddGameObject);
         TRAVELLER_REGISTER_RAW_API_FUNCTION(0x0062a8c0, void, FUN_0062a8c0, int __parameter_0, int __parameter_1, int __parameter_2); // todo: figure out what this does and give it a name
 
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x0091ef34, int32_t, argc);
@@ -51,6 +52,7 @@ class RawAPI {
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x0093d868, uint32_t, next_level);
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x00951ba0, LEVELDATA_s*, NewLData);
         TRAVELLER_REGISTER_RAW_API_GLOBAL(0x0297659c, bool, do_log); // artificial
+        TRAVELLER_REGISTER_RAW_API_GLOBAL(0x00951b50, BOOL, _netclient);
         GameObject_s(**Obj)[64] = (GameObject_s(**)[64])0x0093d524;
 };
 

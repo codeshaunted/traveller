@@ -17,3 +17,6 @@
 
 # RakNet
 add_subdirectory("RakNet")
+
+# DynoHook
+add_subdirectory("DynoHook")

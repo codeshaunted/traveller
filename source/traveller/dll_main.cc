@@ -20,6 +20,11 @@
 #include <Windows.h>
 #include <stdio.h>
 
+#include "dynohook/core.h"
+#include "dynohook/manager.h"
+#include "dynohook/hook.h"
+#include "dynohook/conventions/x86_ms_cdecl.h"
+
 #include "logger.hh"
 #include "addresses.hh"
 #include "raw_api.hh"
@@ -94,6 +99,8 @@ void eventPreInitialize() {
 
     //*RawAPI::do_log = true;
 
+    //*RawAPI::_netclient = true;
+
     event_pre_initialize_trampoline();
 }
 
@@ -102,15 +109,17 @@ Peer* peer = nullptr;
 void eventPostInitialize() {
     TRAVELLER_LOG("Running post-initialization.");
 
-    *RawAPI::isWindowed = true; // todo: make this configurable
-
+    //*RawAPI::isWindowed = true; // todo: make this configurable
+    
+    
     for (int i = 1; i < *RawAPI::argc; ++i) {
         std::string argument = (*RawAPI::argv)[i] + 1;
 
         if (argument == "server") {
-            peer = new Server("0.0.0.0", 42069, 64);
+            peer = new Server("localhost", 42069, 64);
         }
         else if (argument == "client") {
+            *RawAPI::_netclient = true;
             peer = new Client("localhost", 42069);
         }
     }
@@ -129,6 +138,17 @@ void eventUpdate() {
       TRAVELLER_LOG_DEBUG("Position: x: %f, y: %f, z: %f", position.x, position.y, position.z);
       TRAVELLER_LOG_DEBUG("Velocity: x: %f, y: %f, z: %f", velocity.x, velocity.y, velocity.z);
     }*/
+
+    if (GetAsyncKeyState(VK_F3)) {
+        std::cout << "Enter character ID: ";
+        int characterID;
+        std::cin >> characterID;
+
+        //GameObject_s* game_object = RawAPI::AddGameObject();
+        //RawAPI::InitCreature(game_object, characterID, 1);
+
+        RawAPI::AddDynamicCreature(characterID, new nuvec_s(-27.0f, 0.0f, -50.0f), 32728, 0, nullptr, nullptr, 1, nullptr, nullptr, 0, 1);
+    }
 
     if (peer) peer->update();
     
@@ -239,7 +259,51 @@ void initializeDLLProxy() {
     dinput8_functions[4] = GetProcAddress(dinput8, "DllUnregisterServer");
 }
 
+dyno::ReturnAction hookPreInitialize(dyno::CallbackType type, dyno::IHook& hook) {
+    int argc = hook.getArgument<int>(0);
+    TRAVELLER_LOG("argc: %i", argc);
+    //*RawAPI::_netclient = true;
+
+    return dyno::ReturnAction::Ignored;
+}
+
+dyno::ReturnAction hookAddDynamicCreature(dyno::CallbackType type, dyno::IHook& hook) {
+    TRAVELLER_LOG_DEBUG("AddDynamicCreature CALLED");
+    int character_id = hook.getArgument<int>(0);
+    TRAVELLER_LOG_DEBUG("character_id: %i", character_id);
+    nuvec_s* position = hook.getArgument<nuvec_s*>(1);
+    TRAVELLER_LOG_DEBUG("position: X: %f, Y: %f, Z: %f", position->x, position->y, position->z);
+    int param_3 = hook.getArgument<int>(2);
+    TRAVELLER_LOG_DEBUG("param_3: %i", param_3);
+    char* param_4 = hook.getArgument<char*>(3);
+    TRAVELLER_LOG_DEBUG("param_4: %s", param_4);
+    int param_5 = hook.getArgument<int>(4);
+    TRAVELLER_LOG_DEBUG("param_5: %i", param_5);
+    int param_6 = hook.getArgument<int>(5);
+    TRAVELLER_LOG_DEBUG("param_6: %i", param_6);
+    int param_7 = hook.getArgument<int>(6);
+    TRAVELLER_LOG_DEBUG("param_7: %i", param_7);
+    int param_8 = hook.getArgument<int>(7);
+    TRAVELLER_LOG_DEBUG("param_8: %i", param_8);
+    int param_9 = hook.getArgument<int>(8);
+    TRAVELLER_LOG_DEBUG("param_9: %i", param_9);
+    int param_10 = hook.getArgument<int>(9);
+    TRAVELLER_LOG_DEBUG("param_10: %i", param_10);
+    int param_11 = hook.getArgument<int>(10);
+    TRAVELLER_LOG_DEBUG("param_11: %i", param_11);
+
+    return dyno::ReturnAction::Ignored;
+}
+
 void installHooks() {
+    auto& manager = dyno::HookManager::Get();
+    
+    auto pre_initialize_hook = manager.hookDetour((void*)TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS, [] { return new dyno::x86MsCdecl({ dyno::DataType::Int32, dyno::DataType::Pointer }, dyno::DataType::Int32); });
+    pre_initialize_hook->addCallback(dyno::CallbackType::Pre, (dyno::CallbackHandler)hookPreInitialize);
+
+    auto add_dynamic_creature_hook = manager.hookDetour((void*)0x0043d890, [] { return new dyno::x86MsCdecl({ dyno::DataType::Int32, dyno::DataType::Pointer, dyno::DataType::Int32, dyno::DataType::Pointer, dyno::DataType::Pointer, dyno::DataType::Pointer, dyno::DataType::Int32, dyno::DataType::Pointer, dyno::DataType::Pointer, dyno::DataType::Int32, dyno::DataType::Int32 }, dyno::DataType::Pointer); });
+    add_dynamic_creature_hook->addCallback(dyno::CallbackType::Pre, (dyno::CallbackHandler)hookAddDynamicCreature);
+    
     /*
     PVOID api_object_create = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_CREATE_ADDRESS;
     PVOID api_object_destroy = (PVOID)TRAVELLER_FUNCTION_API_OBJECT_DESTROY_ADDRESS;
@@ -259,8 +323,8 @@ void installHooks() {
     DetourTransactionCommit();*/
 
     // engine event hooks
-    event_pre_initialize_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS, eventPreInitialize);
-    Hook::replaceCall(TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS, eventPostInitialize);
+    //event_pre_initialize_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_PRE_INITIALIZE_ADDRESS, eventPreInitialize);
+    //Hook::replaceCall(TRAVELLER_EVENT_POST_INITIALIZE_ADDRESS, eventPostInitialize);
     event_update_trampoline = (t_event)Hook::trampoline(TRAVELLER_EVENT_UPDATE_ADDRESS, eventUpdate, 7);
 
     // engine function hooks

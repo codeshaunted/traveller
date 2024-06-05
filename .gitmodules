@@ -1,3 +1,6 @@
 [submodule "third_party/RakNet"]
 	path = third_party/RakNet
 	url = https://github.com/codeshaunted-legacy/RakNet
+[submodule "third_party/DynoHook"]
+	path = third_party/DynoHook
+	url = https://github.com/qubka/DynoHook
